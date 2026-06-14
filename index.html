@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vik Pro | Ultimate Cloud IDE</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
+        
+        :root {
+            --neon-green: #39ff14;
+            --dark-bg: #080808;
+            --sidebar-bg: #0c0c0c;
+            --border-color: rgba(57, 255, 20, 0.15);
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', monospace;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .glow-green { text-shadow: 0 0 15px var(--neon-green); }
+        .border-neon { border-color: var(--neon-green); }
+        .text-neon { color: var(--neon-green); }
+        .bg-neon { background-color: var(--neon-green); }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 10px; }
+
+        .view { display: none; height: 100vh; width: 100vw; flex-direction: column; }
+        .view.active { display: flex; }
+
+        .editor-container {
+            display: grid;
+            grid-template-columns: 240px 1fr 320px;
+            height: calc(100vh - 70px);
+        }
+
+        .file-tree-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.375rem 1rem;
+            cursor: pointer;
+            font-size: 11px;
+            transition: background-color 0.2s;
+            border-left: 2px solid transparent;
+        }
+        .file-tree-item:hover { background-color: rgba(255, 255, 255, 0.05); }
+        .file-tree-item.active {
+            background-color: rgba(57, 255, 20, 0.1);
+            border-left-color: var(--neon-green);
+            color: var(--neon-green);
+        }
+
+        #canvas-bg { position: fixed; inset: 0; z-index: -1; opacity: 0.15; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- Main Navigation -->
+    <nav class="h-[70px] border-b border-[#39ff14]/20 bg-black/90 backdrop-blur-xl flex items-center justify-between px-8 z-50 sticky top-0">
+        <div class="flex items-center gap-8">
+            <div class="flex items-center gap-3 cursor-pointer group" onclick="showView('dashboard')">
+                <div class="bg-neon text-black font-black p-1 text-xl italic px-3 group-hover:scale-110 transition-transform">V</div>
+                <span class="font-black italic tracking-tighter text-xl text-white uppercase">VIK_PRO <span class="text-neon">IDE</span></span>
+            </div>
+            <div id="nav-links" class="hidden flex gap-6">
+                <button onclick="showView('dashboard')" class="flex items-center gap-2 text-[10px] font-bold uppercase opacity-60 hover:opacity-100 hover:text-neon">
+                    <i data-lucide="layout-grid" class="w-3 h-3"></i> Home
+                </button>
+                <button onclick="showView('workspace')" class="flex items-center gap-2 text-[10px] font-bold uppercase opacity-60 hover:opacity-100 hover:text-neon">
+                    <i data-lucide="code-2" class="w-3 h-3"></i> Editor
+                </button>
+            </div>
+        </div>
+        <div class="flex items-center gap-6">
+            <span id="sync-indicator" class="text-[9px] font-mono text-neon bg-neon/10 px-2 py-1 rounded hidden tracking-widest uppercase">● NEON_ACTIVE</span>
+            <div id="user-pill" class="hidden flex items-center gap-3 bg-white/5 rounded-full pl-4 pr-1 py-1 border border-white/10">
+                <span id="username" class="text-[10px] font-bold uppercase tracking-widest text-white/70">Guest</span>
+                <button onclick="handleLogout()" class="bg-white/10 hover:bg-red-500/20 hover:text-red-400 p-1.5 rounded-full transition-colors">
+                    <i data-lucide="log-out" class="w-3 h-3"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Original Hero Branding Restored -->
+    <section id="hero-view" class="view active items-center justify-center">
+        <div class="text-center p-12">
+            <h1 class="text-8xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] mb-4 text-white uppercase">VIK_PRO.<br/><span class="text-neon glow-green">ENGINE.</span></h1>
+            <p class="text-neon/40 text-xs font-bold tracking-[0.5em] uppercase mb-12">THE_NEXT. GENERATION. CLOUD_IDE.</p>
+            
+            <div id="auth-loading" class="text-neon text-[10px] font-mono animate-pulse">BOOTING_CORE_SYSTEMS...</div>
+            <div id="auth-controls" class="hidden flex flex-col gap-4 max-w-xs mx-auto">
+                <button onclick="loginGoogle()" class="bg-white text-black font-black py-4 uppercase text-xs hover:bg-neon transition-colors">Sign in with Google</button>
+                <button onclick="loginGithub()" class="bg-[#24292e] text-white font-black py-4 uppercase text-xs hover:bg-neon hover:text-black transition-colors">Sign in with GitHub</button>
+                <button onclick="loginAnon()" class="text-[10px] font-bold text-white/30 hover:text-neon uppercase tracking-widest mt-4">Anonymous Sandbox</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard View -->
+    <section id="dashboard-view" class="view overflow-y-auto pt-12 px-8">
+        <div class="max-w-5xl mx-auto">
+            <div class="flex justify-between items-end mb-12">
+                <div>
+                    <h2 class="text-5xl font-black italic text-white uppercase leading-none">Command_Center</h2>
+                    <p class="text-white/30 text-[10px] font-bold tracking-widest uppercase mt-2">System operational / Version 4.0.2</p>
+                </div>
+                <button onclick="showView('workspace')" class="bg-neon text-black font-black px-8 py-3 uppercase text-xs italic skew-x-[-12deg] hover:scale-105 transition-transform">
+                    Initialize_IDE
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white/5 border border-white/10 p-6 rounded-lg backdrop-blur-sm">
+                    <h3 class="text-neon font-bold text-[10px] uppercase mb-4 tracking-widest">Storage_Bridge</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-neon animate-pulse"></div>
+                        <span class="text-white font-bold text-sm">Neon_Postgres</span>
+                    </div>
+                    <p class="text-white/40 text-[10px] mt-4 font-mono leading-relaxed">Active connection to US-EAST-2 AWS cluster.</p>
+                </div>
+                <!-- Additional dashboard cards can go here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Workspace View -->
+    <section id="workspace-view" class="view">
+        <div class="editor-container">
+            <div class="bg-[#0c0c0c] border-r border-white/10 flex flex-col">
+                <div class="p-4 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-[9px] font-black text-white/40 tracking-widest">FILESYSTEM</span>
+                    <button onclick="createNewFile()" class="text-neon"><i data-lucide="file-plus" class="w-3.5 h-3.5"></i></button>
+                </div>
+                <div id="file-list" class="flex-1 overflow-y-auto py-2"></div>
+            </div>
+            <div class="flex flex-col bg-black">
+                <div class="h-10 border-b border-white/5 flex items-center px-6 bg-white/5 justify-between">
+                    <div class="flex items-center gap-4">
+                        <span id="current-filename" class="text-[10px] font-bold text-neon uppercase tracking-tighter italic">main.vik</span>
+                        <span id="save-status" class="text-[8px] text-white/20 italic uppercase tracking-widest">Synced</span>
+                    </div>
+                </div>
+                <textarea id="mainEditor" spellcheck="false" class="w-full h-full bg-transparent p-10 text-lg font-mono text-neon outline-none resize-none leading-relaxed"></textarea>
+            </div>
+            <div class="bg-[#0c0c0c] border-l border-white/10 p-6">
+                <h4 class="text-[10px] font-black text-white/40 mb-4 tracking-widest">OUTPUT_LOG</h4>
+                <div id="terminal" class="font-mono text-[11px] text-white/60"></div>
+            </div>
+        </div>
+    </section>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAUGjwz-arbvz1Cea5eK9DnwxGbb7ajNws",
+            authDomain: "vikproject-de5f8.firebaseapp.com",
+            projectId: "vikproject-de5f8",
+            appId: "1:631154429286:web:ea1e410f68a51b97250ca7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        
+        let files = { 'main.vik': 'say "VIK_PRO_INIT"' };
+        let activeFile = 'main.vik';
+
+        // Helper to safely call Lucide createIcons
+        const refreshIcons = () => {
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+            }
+        };
+
+        // --- NEON POSTGRES LOGIC ---
+
+        async function syncWithNeon(user) {
+            const indicator = document.getElementById('sync-indicator');
+            const status = document.getElementById('save-status');
+            try {
+                status.textContent = "Syncing...";
+                const response = await fetch('/.netlify/functions/db-bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'sync_user', uid: user.uid })
+                });
+                const data = await response.json();
+                if (data.files && data.files.length > 0) {
+                    files = {};
+                    data.files.forEach(f => { files[f.file_name] = f.content; });
+                    activeFile = Object.keys(files)[0];
+                }
+                indicator.classList.remove('hidden');
+                status.textContent = "Synced";
+                renderFileTree();
+                document.getElementById('mainEditor').value = files[activeFile];
+            } catch (err) {
+                console.error("Neon Error:", err);
+                status.textContent = "Offline Mode";
+            }
+        }
+
+        async function saveToNeon(fileName, content) {
+            if (!auth.currentUser) return;
+            const status = document.getElementById('save-status');
+            status.textContent = "Saving...";
+            try {
+                await fetch('/.netlify/functions/db-bridge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        action: 'save_file', 
+                        uid: auth.currentUser.uid,
+                        fileName: fileName,
+                        content: content
+                    })
+                });
+                status.textContent = "Synced";
+            } catch (err) { status.textContent = "Local"; }
+        }
+
+        // --- CORE UI ---
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                document.getElementById('nav-links').classList.remove('hidden');
+                document.getElementById('user-pill').classList.remove('hidden');
+                document.getElementById('username').textContent = user.displayName || user.email || user.uid.substring(0,8);
+                syncWithNeon(user);
+                showView('dashboard');
+            } else {
+                showView('hero');
+            }
+            refreshIcons();
+        });
+
+        window.saveFiles = () => {
+            const content = document.getElementById('mainEditor').value;
+            files[activeFile] = content;
+            saveToNeon(activeFile, content);
+        };
+
+        document.getElementById('mainEditor').addEventListener('input', () => {
+            clearTimeout(window.saveTimer);
+            window.saveTimer = setTimeout(window.saveFiles, 1000);
+        });
+
+        window.renderFileTree = () => {
+            const list = document.getElementById('file-list');
+            list.innerHTML = '';
+            Object.keys(files).sort().forEach(name => {
+                const div = document.createElement('div');
+                div.className = `file-tree-item ${name === activeFile ? 'active' : ''}`;
+                div.innerHTML = `<i data-lucide="file-code" class="w-3.5 h-3.5"></i><span class="truncate uppercase font-bold">${name}</span>`;
+                div.onclick = () => {
+                    activeFile = name;
+                    document.getElementById('mainEditor').value = files[name];
+                    document.getElementById('current-filename').textContent = name;
+                    renderFileTree();
+                };
+                list.appendChild(div);
+            });
+            refreshIcons();
+        };
+
+        window.showView = (id) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            const target = document.getElementById(id + '-view');
+            if (target) {
+                target.classList.add('active');
+            }
+            refreshIcons();
+        };
+
+        window.loginAnon = () => signInAnonymously(auth);
+        window.loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
+        window.loginGithub = () => signInWithPopup(auth, new GithubAuthProvider());
+        window.handleLogout = () => signOut(auth);
+
+        // Matrix Effect
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let drops = [];
+        window.onresize = () => { 
+            canvas.width = window.innerWidth; 
+            canvas.height = window.innerHeight; 
+            drops = Array(Math.floor(canvas.width/20)).fill(1); 
+        };
+        window.onresize();
+        setInterval(() => {
+            ctx.fillStyle = 'rgba(0,0,0,0.1)'; 
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = '#39ff14'; 
+            ctx.font = '15px monospace';
+            drops.forEach((y, i) => {
+                ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*20, y*20);
+                if (y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }, 50);
+
+        document.getElementById('auth-loading').classList.add('hidden');
+        document.getElementById('auth-controls').classList.remove('hidden');
+        
+        // Initial icon load
+        window.addEventListener('load', refreshIcons);
+    </script>
+</body>
+</html>
