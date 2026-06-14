@@ -5,319 +5,931 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vik Pro | Ultimate Cloud IDE</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&display=swap');
-        
         :root {
-            --neon-green: #39ff14;
-            --dark-bg: #080808;
-            --sidebar-bg: #0c0c0c;
-            --border-color: rgba(57, 255, 20, 0.15);
+            --neon: #39ff14;
+            --neon-dim: rgba(57,255,20,0.10);
+            --neon-mid: rgba(57,255,20,0.35);
+            --bg: #070707;
+            --panel: #0d0d0d;
+            --border: rgba(57,255,20,0.14);
+            --border-bright: rgba(57,255,20,0.45);
+            --text-muted: rgba(255,255,255,0.35);
+            --text-dim: rgba(255,255,255,0.12);
         }
-
-        body {
-            background-color: var(--dark-bg);
-            color: #e0e0e0;
-            font-family: 'JetBrains Mono', monospace;
-            margin: 0;
-            overflow: hidden;
-        }
-
-        .glow-green { text-shadow: 0 0 15px var(--neon-green); }
-        .border-neon { border-color: var(--neon-green); }
-        .text-neon { color: var(--neon-green); }
-        .bg-neon { background-color: var(--neon-green); }
-
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: #d4d4d4; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--neon-green); border-radius: 10px; }
-
-        .view { display: none; height: 100vh; width: 100vw; flex-direction: column; }
+        ::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 10px; }
+        #canvas-bg { position: fixed; inset: 0; z-index: 0; opacity: 0.09; pointer-events: none; }
+        .view { display: none; min-height: 100vh; flex-direction: column; position: relative; z-index: 1; }
         .view.active { display: flex; }
 
-        .editor-container {
-            display: grid;
-            grid-template-columns: 240px 1fr 320px;
-            height: calc(100vh - 70px);
-        }
+        /* NAV */
+        nav { position: sticky; top: 0; z-index: 100; height: 64px; background: rgba(7,7,7,0.94); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; }
+        .nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .nav-logo-badge { background: var(--neon); color: #000; font-weight: 900; font-style: italic; font-size: 1.1rem; padding: 2px 10px; transition: transform 0.2s; }
+        .nav-logo:hover .nav-logo-badge { transform: scale(1.08); }
+        .nav-logo-text { font-weight: 900; font-style: italic; font-size: 1rem; letter-spacing: -0.04em; color: #fff; text-transform: uppercase; }
+        .nav-logo-text span { color: var(--neon); }
+        .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+        .nav-link { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; color: #fff; background: none; border: none; cursor: pointer; transition: opacity 0.2s, color 0.2s; font-family: inherit; }
+        .nav-link:hover { opacity: 1; color: var(--neon); }
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        .sync-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neon); background: var(--neon-dim); padding: 3px 10px; border-radius: 2px; }
+        .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 4px 4px 4px 14px; }
+        .user-pill-name { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+        .btn-icon { background: rgba(255,255,255,0.08); border: none; color: #fff; cursor: pointer; padding: 5px; border-radius: 999px; display: flex; transition: background 0.2s, color 0.2s; }
+        .btn-icon:hover { background: rgba(239,68,68,0.2); color: #f87171; }
 
-        .file-tree-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.375rem 1rem;
-            cursor: pointer;
-            font-size: 11px;
-            transition: background-color 0.2s;
-            border-left: 2px solid transparent;
-        }
-        .file-tree-item:hover { background-color: rgba(255, 255, 255, 0.05); }
-        .file-tree-item.active {
-            background-color: rgba(57, 255, 20, 0.1);
-            border-left-color: var(--neon-green);
-            color: var(--neon-green);
-        }
+        /* HELPERS */
+        .text-neon { color: var(--neon); }
+        .glow { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon); }
+        .btn-primary { background: var(--neon); color: #000; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; padding: 14px 32px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: filter 0.2s, transform 0.15s; font-family: inherit; }
+        .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        .btn-outline { background: transparent; color: var(--neon); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; padding: 11px 24px; border: 1px solid var(--neon-mid); cursor: pointer; transition: background 0.2s, border-color 0.2s; font-family: inherit; }
+        .btn-outline:hover { background: var(--neon-dim); border-color: var(--neon); }
 
-        #canvas-bg { position: fixed; inset: 0; z-index: -1; opacity: 0.15; pointer-events: none; }
+        /* HERO */
+        #hero-view { align-items: stretch; justify-content: flex-start; overflow-y: auto; }
+        .hero-above-fold { min-height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
+        .hero-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase; color: var(--neon); opacity: 0.6; margin-bottom: 2rem; }
+        .hero-headline { font-size: clamp(3rem, 10vw, 9rem); font-weight: 900; font-style: italic; line-height: 0.85; letter-spacing: -0.04em; color: #fff; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .hero-headline .accent { color: var(--neon); text-shadow: 0 0 40px var(--neon), 0 0 80px rgba(57,255,20,0.3); }
+        .hero-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; max-width: 480px; line-height: 2; margin: 2rem auto 3rem; }
+        .auth-card { background: var(--panel); border: 1px solid var(--border); width: 100%; max-width: 360px; margin: 0 auto; padding: 2rem; position: relative; }
+        .auth-card::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+        .auth-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1.5rem; }
+        .auth-btn { width: 100%; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; margin-bottom: 10px; }
+        .auth-btn-google { background: #fff; color: #111; }
+        .auth-btn-google:hover { background: var(--neon); color: #000; }
+        .auth-btn-github { background: #1a1a2e; color: #fff; border: 1px solid rgba(255,255,255,0.12); }
+        .auth-btn-github:hover { background: var(--neon); color: #000; border-color: var(--neon); }
+        .auth-divider { text-align: center; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; margin: 14px 0; }
+        .auth-anon { background: none; border: none; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color 0.2s; }
+        .auth-anon:hover { color: var(--neon); }
+        .features-section { padding: 6rem 2rem; background: rgba(0,0,0,0.4); }
+        .section-label { font-size: 9px; font-weight: 700; letter-spacing: 0.4em; text-transform: uppercase; color: var(--neon); opacity: 0.7; margin-bottom: 1rem; }
+        .section-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; font-style: italic; text-transform: uppercase; color: #fff; line-height: 0.9; letter-spacing: -0.03em; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: var(--border); margin-top: 4rem; }
+        .feature-card { background: var(--bg); padding: 2.5rem 2rem; transition: background 0.2s; }
+        .feature-card:hover { background: rgba(57,255,20,0.03); }
+        .feature-icon { width: 40px; height: 40px; background: var(--neon-dim); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+        .feature-icon svg { width: 18px; height: 18px; stroke: var(--neon); }
+        .feature-name { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; margin-bottom: 0.75rem; }
+        .feature-desc { font-size: 10px; color: var(--text-muted); line-height: 1.8; }
+        .stats-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; gap: 4rem; overflow-x: auto; }
+        .stat-item { flex-shrink: 0; }
+        .stat-num { font-size: 2rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; }
+        .stat-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 4px; }
+        .code-preview-section { padding: 6rem 2rem; }
+        .code-window { max-width: 860px; margin: 3rem auto 0; border: 1px solid var(--border); background: var(--panel); position: relative; }
+        .code-window::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+        .code-window-bar { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .code-window-title { font-size: 9px; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-left: auto; }
+        .code-window-body { padding: 1.5rem 2rem; font-size: 12px; line-height: 2; overflow-x: auto; }
+        .kw { color: #bb9af7; } .fn { color: #7dcfff; } .str { color: #9ece6a; } .cmt { color: rgba(255,255,255,0.22); } .num { color: #ff9e64; } .punct { color: rgba(255,255,255,0.4); } .vikvar { color: #e0af68; }
+        .cta-section { padding: 8rem 2rem; text-align: center; background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(57,255,20,0.06) 0%, transparent 70%); }
+
+        /* DASHBOARD */
+        #dashboard-view { overflow-y: auto; }
+        .dashboard-content { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+        .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--border); margin-bottom: 3rem; }
+        .stat-card { background: var(--panel); padding: 1.5rem; }
+        .stat-card-num { font-size: 2rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; }
+        .stat-card-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 6px; }
+        .quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 3rem; }
+        .quick-action { background: var(--panel); border: 1px solid var(--border); padding: 1.5rem; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; gap: 1rem; }
+        .quick-action:hover { border-color: var(--neon); background: var(--neon-dim); }
+        .quick-action-icon svg { width: 20px; height: 20px; stroke: var(--neon); }
+        .quick-action-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #fff; }
+        .quick-action-desc { font-size: 9px; color: var(--text-muted); line-height: 1.7; }
+        .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .section-head-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); }
+        .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+        .file-card { background: var(--panel); border: 1px solid var(--border); padding: 1.25rem; cursor: pointer; transition: border-color 0.2s; display: flex; align-items: center; gap: 12px; }
+        .file-card:hover { border-color: var(--neon); }
+        .file-card-icon { width: 32px; height: 32px; background: var(--neon-dim); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .file-card-icon svg { width: 14px; height: 14px; stroke: var(--neon); }
+        .file-card-name { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fff; letter-spacing: 0.05em; }
+        .file-card-meta { font-size: 8px; color: var(--text-muted); margin-top: 3px; }
+        .activity-feed { border: 1px solid var(--border); background: var(--panel); }
+        .activity-feed-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
+        .activity-feed-head .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); animation: pulse 2s infinite; }
+        .activity-line { padding: 8px 16px; font-size: 10px; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; gap: 12px; }
+        .activity-line .ts { color: var(--neon); opacity: 0.5; font-size: 9px; flex-shrink: 0; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        /* WORKSPACE */
+        #workspace-view { height: 100vh; max-height: 100vh; overflow: hidden; display: grid !important; grid-template-rows: 48px 1fr 190px; }
+        .ide-tabbar { padding: 0 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #080808; height: 48px; overflow: hidden; }
+        .ide-tabs { display: flex; align-items: center; height: 100%; overflow-x: auto; flex: 1; }
+        .ide-tab { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 100%; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); cursor: pointer; border-right: 1px solid var(--border); border-bottom: 2px solid transparent; white-space: nowrap; background: none; border-top: none; border-left: none; font-family: inherit; transition: color 0.15s; }
+        .ide-tab:hover { color: #fff; }
+        .ide-tab.active { color: var(--neon); border-bottom-color: var(--neon); background: var(--neon-dim); }
+        .ide-tab .close-tab { opacity: 0; font-size: 11px; color: var(--text-muted); margin-left: 2px; background: none; border: none; cursor: pointer; line-height: 1; font-family: inherit; }
+        .ide-tab:hover .close-tab { opacity: 1; }
+        .ide-tab .close-tab:hover { color: #f87171; }
+        .tab-new-btn { padding: 0 10px; height: 100%; display: flex; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 16px; background: none; border: none; transition: color 0.15s; }
+        .tab-new-btn:hover { color: var(--neon); }
+        .ide-toolbar { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+        .ide-toolbar-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px 10px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 5px; font-family: inherit; transition: color 0.15s; }
+        .ide-toolbar-btn:hover { color: var(--neon); }
+        .ide-toolbar-btn svg { width: 11px; height: 11px; stroke: currentColor; }
+        .toolbar-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; }
+        .save-status-badge { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 8px; }
+
+        /* IDE BODY */
+        .ide-body { display: grid; grid-template-columns: 220px 1fr; overflow: hidden; flex: 1; }
+        .ide-sidebar { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .sidebar-head { padding: 8px 12px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+        .sidebar-action { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; transition: color 0.15s; display: flex; }
+        .sidebar-action:hover { color: var(--neon); }
+        .sidebar-action svg { width: 12px; height: 12px; stroke: currentColor; }
+        .file-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
+        .file-tree-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 10px; cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; color: rgba(255,255,255,0.45); }
+        .file-tree-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
+        .file-tree-item.active { background: var(--neon-dim); border-left-color: var(--neon); color: var(--neon); }
+        .file-tree-item svg { width: 11px; height: 11px; stroke: currentColor; flex-shrink: 0; }
+        .file-tree-name { font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sidebar-footer { border-top: 1px solid var(--border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+        .sidebar-conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); flex-shrink: 0; }
+        .sidebar-conn-text { font-size: 9px; color: var(--text-muted); letter-spacing: 0.08em; }
+
+        /* SYNTAX PANEL */
+        .ide-syntax-panel { background: #0a0a0a; border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.25s; display: flex; flex-direction: column; flex-shrink: 0; }
+        .ide-syntax-panel.open { width: 280px; }
+        .panel-head { padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+        .panel-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; }
+        .panel-close:hover { color: #fff; }
+
+        /* Syntax ref */
+        .syntax-body { flex: 1; overflow-y: auto; padding: 10px; }
+        .syn-group { margin-bottom: 14px; }
+        .syn-group-title { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--neon); margin-bottom: 6px; opacity: 0.7; }
+        .syn-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 7px 10px; margin-bottom: 4px; cursor: pointer; transition: border-color 0.15s; }
+        .syn-item:hover { border-color: var(--neon); }
+        .syn-item-cmd { font-size: 11px; color: #e0af68; font-weight: 700; }
+        .syn-item-desc { font-size: 9px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+        .syn-insert-hint { font-size: 8px; color: var(--neon); opacity: 0.5; margin-top: 2px; }
+
+        /* AI panel */
+        .ide-ai-panel { background: #0a0a0a; border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.25s; display: flex; flex-direction: column; flex-shrink: 0; }
+        .ide-ai-panel.open { width: 280px; }
+        .ai-panel-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .ai-msg { padding: 9px 11px; font-size: 10px; line-height: 1.7; }
+        .ai-msg.system { background: var(--neon-dim); border: 1px solid var(--border-bright); color: rgba(255,255,255,0.7); }
+        .ai-msg.user { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.55); margin-left: 1rem; }
+        .ai-msg.assistant { background: rgba(57,255,20,0.04); border: 1px solid var(--border); color: rgba(255,255,255,0.75); }
+        .ai-input-row { display: flex; gap: 6px; padding: 9px; border-top: 1px solid var(--border); flex-shrink: 0; }
+        #ai-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 7px 10px; outline: none; }
+        #ai-input:focus { border-color: var(--neon); }
+        #ai-input::placeholder { color: var(--text-dim); }
+
+        /* EDITOR AREA */
+        .ide-editor-wrap { display: flex; flex: 1; overflow: hidden; }
+        .ide-editor-area { display: flex; flex-direction: column; overflow: hidden; background: #090909; flex: 1; }
+        .editor-statusbar { padding: 0 14px; height: 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--panel); flex-shrink: 0; }
+        .statusbar-left { display: flex; align-items: center; gap: 14px; }
+        .status-item { font-size: 9px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+        .status-item.active { color: var(--neon); }
+        .status-item svg { width: 10px; height: 10px; stroke: currentColor; }
+        .editor-main { display: flex; flex: 1; overflow: hidden; }
+        .editor-gutter { padding: 1.25rem 10px 1.25rem 0; background: rgba(0,0,0,0.25); border-right: 1px solid var(--border); min-width: 44px; text-align: right; font-size: 11px; line-height: 1.85; color: var(--text-dim); overflow: hidden; user-select: none; flex-shrink: 0; }
+        #mainEditor { flex: 1; background: transparent; color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.85; padding: 1.25rem 1.5rem; outline: none; resize: none; border: none; tab-size: 2; overflow-y: auto; caret-color: var(--neon); }
+        #mainEditor::placeholder { color: rgba(57,255,20,0.15); }
+        .btn-run { background: var(--neon); color: #000; border: none; cursor: pointer; font-family: inherit; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 14px; display: flex; align-items: center; gap: 5px; transition: filter 0.2s; }
+        .btn-run:hover { filter: brightness(1.2); }
+        .btn-run svg { width: 10px; height: 10px; stroke: currentColor; }
+
+        /* TERMINAL */
+        .ide-terminal { border-top: 1px solid var(--border); background: var(--panel); display: flex; flex-direction: column; overflow: hidden; height: 190px; }
+        .terminal-tabbar { display: flex; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+        .terminal-tab { padding: 7px 14px; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; transition: all 0.15s; }
+        .terminal-tab.active { color: var(--neon); border-bottom-color: var(--neon); }
+        .terminal-actions { margin-left: auto; display: flex; gap: 2px; padding: 0 8px; }
+        .terminal-action { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; font-size: 10px; transition: color 0.15s; font-family: inherit; }
+        .terminal-action:hover { color: var(--neon); }
+        #terminal { flex: 1; padding: 10px 14px; font-size: 11px; line-height: 1.7; overflow-y: auto; color: rgba(255,255,255,0.55); }
+        .t-line { display: flex; gap: 10px; margin-bottom: 1px; }
+        .t-prompt { color: var(--neon); flex-shrink: 0; }
+        .t-out { color: rgba(255,255,255,0.5); }
+        .t-err { color: #f87171; }
+        .t-success { color: var(--neon); }
+        .t-warn { color: #facc15; }
+        .t-input-prompt { color: #7dcfff; }
+
+        /* INPUT MODAL (for get/getIn) */
+        .input-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 600; display: flex; align-items: center; justify-content: center; }
+        .input-modal { background: var(--panel); border: 1px solid var(--border-bright); padding: 2rem; min-width: 340px; position: relative; }
+        .input-modal::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+        .input-modal-label { font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+        .input-modal-question { font-size: 14px; color: #fff; font-weight: 700; margin-bottom: 1.25rem; line-height: 1.5; }
+        .input-modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 13px; padding: 10px 14px; outline: none; margin-bottom: 1rem; }
+        .input-modal-input:focus { border-color: var(--neon); }
+        .input-modal-actions { display: flex; gap: 8px; }
+        .input-modal-ok { flex: 1; }
+
+        /* NEW FILE MODAL */
+        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; display: flex; align-items: center; justify-content: center; }
+        .modal { background: var(--panel); border: 1px solid var(--border); padding: 2rem; min-width: 320px; position: relative; }
+        .modal::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+        .modal-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
+        .modal-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 13px; padding: 10px 14px; outline: none; margin-bottom: 1rem; }
+        .modal-input:focus { border-color: var(--neon); }
+        .modal-actions { display: flex; gap: 8px; }
+        .modal-cancel { background: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); padding: 11px 20px; font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
+        .modal-cancel:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+
+        /* TOAST */
+        .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 999; background: var(--panel); border: 1px solid var(--border-bright); padding: 11px 18px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--neon); transform: translateY(70px); opacity: 0; transition: all 0.3s; pointer-events: none; max-width: 300px; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        @keyframes pulse-anim { 0%,100%{opacity:1} 50%{opacity:0.3} }
     </style>
 </head>
 <body>
-    <canvas id="canvas-bg"></canvas>
 
-    <!-- Main Navigation -->
-    <nav class="h-[70px] border-b border-[#39ff14]/20 bg-black/90 backdrop-blur-xl flex items-center justify-between px-8 z-50 sticky top-0">
-        <div class="flex items-center gap-8">
-            <div class="flex items-center gap-3 cursor-pointer group" onclick="showView('dashboard')">
-                <div class="bg-neon text-black font-black p-1 text-xl italic px-3 group-hover:scale-110 transition-transform">V</div>
-                <span class="font-black italic tracking-tighter text-xl text-white uppercase">VIK_PRO <span class="text-neon">IDE</span></span>
-            </div>
-            <div id="nav-links" class="hidden flex gap-6">
-                <button onclick="showView('dashboard')" class="flex items-center gap-2 text-[10px] font-bold uppercase opacity-60 hover:opacity-100 hover:text-neon">
-                    <i data-lucide="layout-grid" class="w-3 h-3"></i> Home
+<canvas id="canvas-bg"></canvas>
+
+<!-- NAV -->
+<nav id="main-nav">
+    <div class="nav-logo" onclick="showView('hero')">
+        <div class="nav-logo-badge">V</div>
+        <span class="nav-logo-text">VIK_PRO <span>IDE</span></span>
+    </div>
+    <div id="nav-links" class="nav-links" style="display:none">
+        <button class="nav-link" onclick="showView('dashboard')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+        </button>
+        <button class="nav-link" onclick="showView('workspace')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Editor
+        </button>
+        <button class="nav-link" onclick="showSyntaxRef()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Syntax
+        </button>
+    </div>
+    <div class="nav-right">
+        <span id="sync-indicator" class="sync-badge" style="display:none">● SYNCED</span>
+        <div id="user-pill" class="user-pill" style="display:none">
+            <span id="username" class="user-pill-name">Guest</span>
+            <button class="btn-icon" onclick="handleLogout()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </button>
+        </div>
+    </div>
+</nav>
+
+<!-- ══════ HERO ══════ -->
+<section id="hero-view" class="view active">
+    <div class="hero-above-fold">
+        <p class="hero-eyebrow">Version 4.0.2 — Vik Script Powered</p>
+        <h1 class="hero-headline">VIK_PRO.<br/><span class="accent">ENGINE.</span></h1>
+        <p class="hero-sub">The cloud IDE built for Vik Script — a kid-friendly language with plain English commands. Write, run, and ship from anywhere.</p>
+        <div id="auth-loading" style="font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--neon); animation:pulse-anim 1.5s infinite;">BOOTING_CORE_SYSTEMS…</div>
+        <div id="auth-controls" style="display:none; width:100%">
+            <div class="auth-card">
+                <p class="auth-title">Sign in to your workspace</p>
+                <button class="auth-btn auth-btn-google" onclick="loginGoogle()">
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    Continue with Google
                 </button>
-                <button onclick="showView('workspace')" class="flex items-center gap-2 text-[10px] font-bold uppercase opacity-60 hover:opacity-100 hover:text-neon">
-                    <i data-lucide="code-2" class="w-3 h-3"></i> Editor
+                <button class="auth-btn auth-btn-github" onclick="loginGithub()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                    Continue with GitHub
                 </button>
+                <div class="auth-divider">— OR —</div>
+                <button class="auth-anon" onclick="loginAnon()">Enter Anonymous Sandbox</button>
             </div>
         </div>
-        <div class="flex items-center gap-6">
-            <span id="sync-indicator" class="text-[9px] font-mono text-neon bg-neon/10 px-2 py-1 rounded hidden tracking-widest uppercase">● NEON_ACTIVE</span>
-            <div id="user-pill" class="hidden flex items-center gap-3 bg-white/5 rounded-full pl-4 pr-1 py-1 border border-white/10">
-                <span id="username" class="text-[10px] font-bold uppercase tracking-widest text-white/70">Guest</span>
-                <button onclick="handleLogout()" class="bg-white/10 hover:bg-red-500/20 hover:text-red-400 p-1.5 rounded-full transition-colors">
-                    <i data-lucide="log-out" class="w-3 h-3"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
+    </div>
 
-    <!-- Original Hero Branding Restored -->
-    <section id="hero-view" class="view active items-center justify-center">
-        <div class="text-center p-12">
-            <h1 class="text-8xl md:text-[10rem] font-black italic tracking-tighter leading-[0.8] mb-4 text-white uppercase">VIK_PRO.<br/><span class="text-neon glow-green">ENGINE.</span></h1>
-            <p class="text-neon/40 text-xs font-bold tracking-[0.5em] uppercase mb-12">THE_NEXT. GENERATION. CLOUD_IDE.</p>
-            
-            <div id="auth-loading" class="text-neon text-[10px] font-mono animate-pulse">BOOTING_CORE_SYSTEMS...</div>
-            <div id="auth-controls" class="hidden flex flex-col gap-4 max-w-xs mx-auto">
-                <button onclick="loginGoogle()" class="bg-white text-black font-black py-4 uppercase text-xs hover:bg-neon transition-colors">Sign in with Google</button>
-                <button onclick="loginGithub()" class="bg-[#24292e] text-white font-black py-4 uppercase text-xs hover:bg-neon hover:text-black transition-colors">Sign in with GitHub</button>
-                <button onclick="loginAnon()" class="text-[10px] font-bold text-white/30 hover:text-neon uppercase tracking-widest mt-4">Anonymous Sandbox</button>
-            </div>
-        </div>
-    </section>
+    <div class="stats-bar">
+        <div class="stat-item"><div class="stat-num">4.2ms</div><div class="stat-label">Avg. Sync Latency</div></div>
+        <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+        <div class="stat-item"><div class="stat-num">12+</div><div class="stat-label">Language Commands</div></div>
+        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">File Storage</div></div>
+        <div class="stat-item"><div class="stat-num">US‑E2</div><div class="stat-label">Active Region</div></div>
+    </div>
 
-    <!-- Dashboard View -->
-    <section id="dashboard-view" class="view overflow-y-auto pt-12 px-8">
-        <div class="max-w-5xl mx-auto">
-            <div class="flex justify-between items-end mb-12">
-                <div>
-                    <h2 class="text-5xl font-black italic text-white uppercase leading-none">Command_Center</h2>
-                    <p class="text-white/30 text-[10px] font-bold tracking-widest uppercase mt-2">System operational / Version 4.0.2</p>
+    <div class="features-section">
+        <div style="max-width:1100px; margin:0 auto">
+            <p class="section-label">Why Vik Pro</p>
+            <h2 class="section-title">Built for everyone.<br/>Ships fast.</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+                    <div class="feature-name">Vik Script Language</div>
+                    <div class="feature-desc">A plain-English scripting language made for beginners. Use <code style="color:var(--neon)">say</code>, <code style="color:var(--neon)">get</code>, <code style="color:var(--neon)">calc</code> and more — no semicolons, no confusion.</div>
                 </div>
-                <button onclick="showView('workspace')" class="bg-neon text-black font-black px-8 py-3 uppercase text-xs italic skew-x-[-12deg] hover:scale-105 transition-transform">
-                    Initialize_IDE
-                </button>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+                    <div class="feature-name">Real Interpreter</div>
+                    <div class="feature-desc">Hit Run and watch your Vik Script execute live — variables, conditions, loops, functions, arrays, and user input all work.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+                    <div class="feature-name">Cloud Sync</div>
+                    <div class="feature-desc">Every file auto-syncs to Neon Postgres in milliseconds. Open from any device and your work is already there.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+                    <div class="feature-name">Syntax Reference</div>
+                    <div class="feature-desc">The built-in syntax panel shows every command with examples. Click any snippet to insert it straight into your editor.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+                    <div class="feature-name">Multi-File Projects</div>
+                    <div class="feature-desc">Tab-based file management, a full sidebar tree, and per-file autosave. Organize your Vik Script projects like a pro.</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
+                    <div class="feature-name">AI Co-Pilot</div>
+                    <div class="feature-desc">Stuck? Ask Vik AI to help you fix bugs, explain code, or write new Vik Script — right inside the editor panel.</div>
+                </div>
             </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white/5 border border-white/10 p-6 rounded-lg backdrop-blur-sm">
-                    <h3 class="text-neon font-bold text-[10px] uppercase mb-4 tracking-widest">Storage_Bridge</h3>
-                    <div class="flex items-center gap-3">
-                        <div class="w-2 h-2 rounded-full bg-neon animate-pulse"></div>
-                        <span class="text-white font-bold text-sm">Neon_Postgres</span>
+        </div>
+    </div>
+
+    <div class="code-preview-section">
+        <div style="max-width:1100px; margin:0 auto; text-align:center">
+            <p class="section-label">Vik Script in action</p>
+            <h2 class="section-title">Plain English.<br/>Real results.</h2>
+            <div class="code-window">
+                <div class="code-window-bar">
+                    <div class="dot" style="background:#ff5f57"></div>
+                    <div class="dot" style="background:#febc2e"></div>
+                    <div class="dot" style="background:#28c840"></div>
+                    <span class="code-window-title">hello_world.vik — VIK_PRO_ENGINE</span>
+                </div>
+                <div class="code-window-body"><pre><span class="cmt">// Ask the user for their name and age</span>
+<span class="kw">get</span> name <span class="str">What is your name?</span>
+<span class="kw">getIn</span> age <span class="str">How old are you?</span>
+
+<span class="cmt">// Say hello with their name</span>
+<span class="kw">say</span> Hello <span class="vikvar">vari,name</span>!
+
+<span class="cmt">// Check their age</span>
+<span class="kw">i</span> age >= <span class="num">18</span>
+  <span class="kw">say</span> You are an adult. Welcome!
+<span class="kw">enif</span>
+<span class="kw">i</span> age >= <span class="num">13</span>
+  <span class="kw">say</span> Hey there, teenager!
+<span class="kw">enif</span>
+
+<span class="cmt">// Define and call a function</span>
+<span class="kw">fun</span> greet
+  <span class="kw">say</span> Welcome to Vik Script, <span class="vikvar">vari,name</span>!
+<span class="kw">endf</span>
+
+<span class="kw">call</span> greet</pre></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cta-section">
+        <p class="section-label">Ready to code?</p>
+        <h2 class="section-title" style="margin-bottom:2.5rem">Start writing Vik Script<br/><span style="color:var(--neon)">in 10 seconds.</span></h2>
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap">
+            <button class="btn-primary" onclick="document.querySelector('.hero-above-fold').scrollIntoView({behavior:'smooth'})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Get Started Free
+            </button>
+            <button class="btn-outline" onclick="loginAnon()">Try the Sandbox</button>
+        </div>
+    </div>
+</section>
+
+<!-- ══════ DASHBOARD ══════ -->
+<section id="dashboard-view" class="view">
+    <div class="dashboard-content">
+        <div class="dashboard-header">
+            <div>
+                <div style="font-size:clamp(1.8rem,4vw,3rem); font-weight:900; font-style:italic; text-transform:uppercase; color:#fff; line-height:0.9; letter-spacing:-0.03em;" id="greeting-text">Command_Center</div>
+                <span style="font-size:9px; font-weight:700; letter-spacing:0.2em; color:var(--text-muted); text-transform:uppercase; display:block; margin-top:0.75rem">System operational — V4.0.2</span>
+            </div>
+            <button class="btn-primary" onclick="showView('workspace')">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Open IDE
+            </button>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card"><div class="stat-card-num" id="stat-files">0</div><div class="stat-card-label">Total Files</div></div>
+            <div class="stat-card"><div class="stat-card-num" id="stat-lines">0</div><div class="stat-card-label">Lines Written</div></div>
+            <div class="stat-card"><div class="stat-card-num" id="stat-fns">0</div><div class="stat-card-label">Functions Defined</div></div>
+            <div class="stat-card"><div class="stat-card-num" style="color:#fff">● OK</div><div class="stat-card-label">Neon Status</div></div>
+        </div>
+        <p style="font-size:9px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:var(--text-muted); margin-bottom:1rem">Quick Actions</p>
+        <div class="quick-grid" style="margin-bottom:3rem">
+            <div class="quick-action" onclick="openNewFile()">
+                <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
+                <div class="quick-action-label">New File</div>
+                <div class="quick-action-desc">Start a fresh .vik file</div>
+            </div>
+            <div class="quick-action" onclick="showView('workspace')">
+                <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+                <div class="quick-action-label">Open Editor</div>
+                <div class="quick-action-desc">Jump into the full IDE</div>
+            </div>
+            <div class="quick-action" onclick="showSyntaxRef()">
+                <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+                <div class="quick-action-label">Syntax Guide</div>
+                <div class="quick-action-desc">All Vik Script commands</div>
+            </div>
+            <div class="quick-action" onclick="loadExample()">
+                <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+                <div class="quick-action-label">Load Example</div>
+                <div class="quick-action-desc">Start with a sample program</div>
+            </div>
+        </div>
+        <div class="section-head">
+            <p class="section-head-title">Your Files</p>
+            <button class="btn-outline" onclick="openNewFile()" style="font-size:8px; padding:7px 14px">+ New File</button>
+        </div>
+        <div class="files-grid" id="dashboard-files" style="margin-bottom:3rem"></div>
+        <div class="section-head" style="margin-bottom:1rem">
+            <p class="section-head-title">Activity Log</p>
+        </div>
+        <div class="activity-feed">
+            <div class="activity-feed-head"><span class="pulse"></span> Live Events</div>
+            <div id="activity-lines"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ══════ WORKSPACE ══════ -->
+<section id="workspace-view" class="view" style="display:none;">
+    <!-- Tab bar + toolbar -->
+    <div class="ide-tabbar">
+        <div class="ide-tabs" id="ide-tabs">
+            <button class="tab-new-btn" onclick="openNewFile()" title="New file">＋</button>
+        </div>
+        <div class="ide-toolbar">
+            <button class="ide-toolbar-btn" onclick="runCode()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>Run
+            </button>
+            <div class="toolbar-sep"></div>
+            <button class="ide-toolbar-btn" onclick="window.saveFiles()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save
+            </button>
+            <div class="toolbar-sep"></div>
+            <button class="ide-toolbar-btn" onclick="toggleSyntaxPanel()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Syntax
+            </button>
+            <button class="ide-toolbar-btn" onclick="toggleAIPanel()">
+                <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>AI
+            </button>
+            <div class="toolbar-sep"></div>
+            <span class="save-status-badge" id="save-status">Synced</span>
+        </div>
+    </div>
+
+    <!-- IDE body -->
+    <div class="ide-body">
+        <!-- Sidebar -->
+        <div class="ide-sidebar">
+            <div class="sidebar-head">
+                Filesystem
+                <div style="display:flex;gap:4px">
+                    <button class="sidebar-action" onclick="openNewFile()" title="New file">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                    </button>
+                    <button class="sidebar-action" onclick="deleteActiveFile()" title="Delete">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="file-tree" id="file-list"></div>
+            <div class="sidebar-footer">
+                <div class="sidebar-conn-dot" id="conn-dot"></div>
+                <span class="sidebar-conn-text" id="conn-text">Connecting…</span>
+            </div>
+        </div>
+
+        <!-- Editor + side panels -->
+        <div class="ide-editor-wrap">
+            <div class="ide-editor-area">
+                <div class="editor-statusbar">
+                    <div class="statusbar-left">
+                        <span class="status-item active">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                            <span id="current-filename">main.vik</span>
+                        </span>
+                        <span class="status-item" id="cursor-pos">Ln 1, Col 1</span>
+                        <span class="status-item">VIK_SCRIPT</span>
                     </div>
-                    <p class="text-white/40 text-[10px] mt-4 font-mono leading-relaxed">Active connection to US-EAST-2 AWS cluster.</p>
+                    <button class="btn-run" onclick="runCode()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        RUN
+                    </button>
                 </div>
-                <!-- Additional dashboard cards can go here -->
+                <div class="editor-main">
+                    <div class="editor-gutter" id="gutter">1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>10</div>
+                    <textarea id="mainEditor"
+                        spellcheck="false"
+                        placeholder="// Start writing Vik Script here…"
+                        oninput="handleEditorInput(this)"
+                        onkeydown="handleEditorKeydown(event)"
+                        onkeyup="updateCursorPos(this)"
+                        onclick="updateCursorPos(this)"
+                    ></textarea>
+                </div>
+            </div>
+
+            <!-- Syntax panel -->
+            <div class="ide-syntax-panel" id="syntax-panel">
+                <div class="panel-head">
+                    Vik Script Syntax
+                    <button class="panel-close" onclick="toggleSyntaxPanel()">×</button>
+                </div>
+                <div class="syntax-body" id="syntax-body"></div>
+            </div>
+
+            <!-- AI panel -->
+            <div class="ide-ai-panel" id="ai-panel">
+                <div class="panel-head">
+                    Vik AI Assistant
+                    <button class="panel-close" onclick="toggleAIPanel()">×</button>
+                </div>
+                <div class="ai-panel-body" id="ai-messages">
+                    <div class="ai-msg system">👾 <strong>Vik AI</strong> — Ask me to explain, write, or fix your Vik Script code.</div>
+                </div>
+                <div class="ai-input-row">
+                    <input type="text" id="ai-input" placeholder="Ask about your code…" onkeydown="if(event.key==='Enter')sendAIMessage()">
+                    <button class="btn-run" style="padding:7px 12px" onclick="sendAIMessage()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                    </button>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
-    <!-- Workspace View -->
-    <section id="workspace-view" class="view">
-        <div class="editor-container">
-            <div class="bg-[#0c0c0c] border-r border-white/10 flex flex-col">
-                <div class="p-4 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-[9px] font-black text-white/40 tracking-widest">FILESYSTEM</span>
-                    <button onclick="createNewFile()" class="text-neon"><i data-lucide="file-plus" class="w-3.5 h-3.5"></i></button>
-                </div>
-                <div id="file-list" class="flex-1 overflow-y-auto py-2"></div>
-            </div>
-            <div class="flex flex-col bg-black">
-                <div class="h-10 border-b border-white/5 flex items-center px-6 bg-white/5 justify-between">
-                    <div class="flex items-center gap-4">
-                        <span id="current-filename" class="text-[10px] font-bold text-neon uppercase tracking-tighter italic">main.vik</span>
-                        <span id="save-status" class="text-[8px] text-white/20 italic uppercase tracking-widest">Synced</span>
-                    </div>
-                </div>
-                <textarea id="mainEditor" spellcheck="false" class="w-full h-full bg-transparent p-10 text-lg font-mono text-neon outline-none resize-none leading-relaxed"></textarea>
-            </div>
-            <div class="bg-[#0c0c0c] border-l border-white/10 p-6">
-                <h4 class="text-[10px] font-black text-white/40 mb-4 tracking-widest">OUTPUT_LOG</h4>
-                <div id="terminal" class="font-mono text-[11px] text-white/60"></div>
+    <!-- Terminal -->
+    <div class="ide-terminal">
+        <div class="terminal-tabbar">
+            <button class="terminal-tab active" onclick="switchTermTab(this,'output')">Output</button>
+            <button class="terminal-tab" onclick="switchTermTab(this,'problems')">Problems</button>
+            <button class="terminal-tab" onclick="switchTermTab(this,'log')">Log</button>
+            <div class="terminal-actions">
+                <button class="terminal-action" onclick="clearTerminal()" title="Clear">✕ Clear</button>
             </div>
         </div>
-    </section>
+        <div id="terminal">
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-out">VIK_PRO Engine v4.0.2 — Vik Script interpreter ready.</span></div>
+            <div class="t-line"><span class="t-prompt">▶</span><span class="t-out">Type your code and hit RUN. Use get/getIn for user input.</span></div>
+        </div>
+    </div>
+</section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+<!-- NEW FILE MODAL -->
+<div id="new-file-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeNewFileModal()">
+    <div class="modal">
+        <div class="modal-title">Create New File</div>
+        <input type="text" class="modal-input" id="new-file-name" placeholder="filename.vik" onkeydown="if(event.key==='Enter')confirmNewFile()">
+        <div class="modal-actions">
+            <button class="btn-primary" style="flex:1; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="confirmNewFile()">Create</button>
+            <button class="modal-cancel" onclick="closeNewFileModal()">Cancel</button>
+        </div>
+    </div>
+</div>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAUGjwz-arbvz1Cea5eK9DnwxGbb7ajNws",
-            authDomain: "vikproject-de5f8.firebaseapp.com",
-            projectId: "vikproject-de5f8",
-            appId: "1:631154429286:web:ea1e410f68a51b97250ca7"
-        };
+<!-- USER INPUT MODAL (for get / getIn) -->
+<div id="input-modal" class="input-modal-backdrop" style="display:none">
+    <div class="input-modal">
+        <div class="input-modal-label">Vik Script — User Input Required</div>
+        <div class="input-modal-question" id="input-modal-question">Enter a value:</div>
+        <input type="text" class="input-modal-input" id="input-modal-field" onkeydown="if(event.key==='Enter')resolveInput()">
+        <div class="input-modal-actions">
+            <button class="btn-primary input-modal-ok" onclick="resolveInput()">Submit</button>
+        </div>
+    </div>
+</div>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        
-        let files = { 'main.vik': 'say "VIK_PRO_INIT"' };
-        let activeFile = 'main.vik';
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
-        // Helper to safely call Lucide createIcons
-        const refreshIcons = () => {
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                lucide.createIcons();
-            }
-        };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getAuth, signInAnonymously, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // --- NEON POSTGRES LOGIC ---
+const firebaseConfig = {
+    apiKey: "AIzaSyAUGjwz-arbvz1Cea5eK9DnwxGbb7ajNws",
+    authDomain: "vikproject-de5f8.firebaseapp.com",
+    projectId: "vikproject-de5f8",
+    appId: "1:631154429286:web:ea1e410f68a51b97250ca7"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-        async function syncWithNeon(user) {
-            const indicator = document.getElementById('sync-indicator');
-            const status = document.getElementById('save-status');
-            try {
-                status.textContent = "Syncing...";
-                const response = await fetch('/.netlify/functions/db-bridge', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'sync_user', uid: user.uid })
-                });
-                const data = await response.json();
-                if (data.files && data.files.length > 0) {
-                    files = {};
-                    data.files.forEach(f => { files[f.file_name] = f.content; });
-                    activeFile = Object.keys(files)[0];
-                }
-                indicator.classList.remove('hidden');
-                status.textContent = "Synced";
-                renderFileTree();
-                document.getElementById('mainEditor').value = files[activeFile];
-            } catch (err) {
-                console.error("Neon Error:", err);
-                status.textContent = "Offline Mode";
-            }
-        }
+// ══════════════════════ STATE ══════════════════════
+const EXAMPLE_CODE = `// Vik Script — Example Program
+// This is a full demo of what Vik Script can do!
 
-        async function saveToNeon(fileName, content) {
-            if (!auth.currentUser) return;
-            const status = document.getElementById('save-status');
-            status.textContent = "Saving...";
-            try {
-                await fetch('/.netlify/functions/db-bridge', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        action: 'save_file', 
-                        uid: auth.currentUser.uid,
-                        fileName: fileName,
-                        content: content
-                    })
-                });
-                status.textContent = "Synced";
-            } catch (err) { status.textContent = "Local"; }
-        }
+// ── Input ──
+get name What is your name?
+getIn age How old are you?
 
-        // --- CORE UI ---
+// ── Output with variable ──
+say Hello vari,name! Welcome to Vik Script!
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('nav-links').classList.remove('hidden');
-                document.getElementById('user-pill').classList.remove('hidden');
-                document.getElementById('username').textContent = user.displayName || user.email || user.uid.substring(0,8);
-                syncWithNeon(user);
-                showView('dashboard');
-            } else {
-                showView('hero');
-            }
-            refreshIcons();
+// ── Conditions ──
+set condition_met = false
+
+i age >= 18
+  say You are an adult.
+  set condition_met = true
+enif
+
+i condition_met == false
+  i age >= 13
+    say You are a teenager!
+    set condition_met = true
+  enif
+enif
+
+i condition_met == false
+  say You must be a child. That is awesome!
+enif
+
+// ── Arrays ──
+ar colors = red,green,blue
+say Your color list: vari,colors
+
+// ── Math ──
+calc double_age = age a age
+say Your age doubled is: vari,double_age
+
+// ── Join variables ──
+joi,name double_age
+say Name and doubled age joined: vari,name double_age
+
+// ── Functions ──
+fun greet
+  say Welcome vari,name to Vik Script!
+endf
+
+call greet
+`;
+
+let files = {
+    'main.vik': EXAMPLE_CODE,
+    'config.vik': `// Project config
+set project_name = MyProject
+set version = 1
+say Project vari,project_name is running!
+`,
+};
+let activeFile = 'main.vik';
+let aiPanelOpen = false;
+let syntaxPanelOpen = false;
+let aiConversation = [];
+let activityLog = [];
+let inputResolve = null; // for async input modal
+
+// ══════════════════════ SYNTAX REFERENCE DATA ══════════════════════
+const SYNTAX_REF = [
+    { group: 'Input', items: [
+        { cmd: 'get varName Question text?', desc: 'Ask the user for text. Stores answer in varName.', insert: 'get name What is your name?' },
+        { cmd: 'getIn varName Question text?', desc: 'Ask the user for a number. Stores answer in varName.', insert: 'getIn age How old are you?' },
+    ]},
+    { group: 'Output', items: [
+        { cmd: 'say message text', desc: 'Print a line of text. Use vari,varName to show a variable.', insert: 'say Hello vari,name!' },
+    ]},
+    { group: 'Variables', items: [
+        { cmd: 'set varName = value', desc: 'Create or update a variable.', insert: 'set score = 0' },
+        { cmd: 'vari,varName', desc: 'Use a variable inside say or other commands.', insert: 'say Your score is vari,score' },
+    ]},
+    { group: 'Conditions', items: [
+        { cmd: 'i varName == value\n  ...\nenif', desc: 'If block. Supports ==, !=, >=, <=, >, <.', insert: 'i score >= 10\n  say You win!\nenif' },
+    ]},
+    { group: 'Arrays', items: [
+        { cmd: 'ar arrayName = a,b,c', desc: 'Define an array with comma-separated values.', insert: 'ar colors = red,green,blue' },
+    ]},
+    { group: 'Math', items: [
+        { cmd: 'calc result = a OP b', desc: 'Math: a=add, s=subtract, m=multiply, d=divide.', insert: 'calc total = score a 10' },
+    ]},
+    { group: 'Loops', items: [
+        { cmd: 'rep N\n  ...\nenrep', desc: 'Repeat a block N times.', insert: 'rep 3\n  say Hello!\nenrep' },
+        { cmd: 'whi varName OP value\n  ...\nenwhi', desc: 'While loop — repeats while condition is true.', insert: 'whi count < 5\n  say vari,count\n  calc count = count a 1\nenwhi' },
+    ]},
+    { group: 'Functions', items: [
+        { cmd: 'fun funcName\n  ...\nendf', desc: 'Define a reusable function.', insert: 'fun greet\n  say Hello vari,name!\nendf' },
+        { cmd: 'call funcName', desc: 'Call (run) a function.', insert: 'call greet' },
+    ]},
+    { group: 'String Tools', items: [
+        { cmd: 'joi,var1 var2', desc: 'Join two variables into var1 (with a space).', insert: 'joi,firstName lastName' },
+        { cmd: 'upp varName', desc: 'Convert variable to uppercase.', insert: 'upp name' },
+        { cmd: 'low varName', desc: 'Convert variable to lowercase.', insert: 'low name' },
+        { cmd: 'len varName resultVar', desc: 'Get the length (character count) of a variable.', insert: 'len name nameLength' },
+    ]},
+    { group: 'Random', items: [
+        { cmd: 'rnd varName min max', desc: 'Generate a random integer between min and max.', insert: 'rnd dice 1 6' },
+    ]},
+    { group: 'Comments', items: [
+        { cmd: '// comment text', desc: 'A comment — not run, just notes for you.', insert: '// This is a comment' },
+    ]},
+];
+
+// ══════════════════════ TOAST ══════════════════════
+window.showToast = (msg) => {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+};
+
+// ══════════════════════ NEON SYNC ══════════════════════
+async function syncWithNeon(user) {
+    setConn('Connecting…', '#facc15');
+    try {
+        const res = await fetch('/.netlify/functions/db-bridge', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'sync_user', uid: user.uid })
         });
-
-        window.saveFiles = () => {
-            const content = document.getElementById('mainEditor').value;
-            files[activeFile] = content;
-            saveToNeon(activeFile, content);
-        };
-
-        document.getElementById('mainEditor').addEventListener('input', () => {
-            clearTimeout(window.saveTimer);
-            window.saveTimer = setTimeout(window.saveFiles, 1000);
+        const data = await res.json();
+        if (data.files && data.files.length > 0) {
+            files = {};
+            data.files.forEach(f => { files[f.file_name] = f.content; });
+            activeFile = Object.keys(files)[0];
+        }
+        document.getElementById('sync-indicator').style.display = 'block';
+        setConn('US-East-2', 'var(--neon)');
+        setSaveStatus('Synced');
+        addActivity('Cloud sync complete');
+        updateAllUI();
+    } catch {
+        setConn('Offline Mode', '#f87171');
+        setSaveStatus('Offline');
+        addActivity('Running offline');
+        updateAllUI();
+    }
+}
+async function saveToNeon(fileName, content) {
+    if (!auth.currentUser) return;
+    setSaveStatus('Saving…');
+    try {
+        await fetch('/.netlify/functions/db-bridge', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'save_file', uid: auth.currentUser.uid, fileName, content })
         });
+        setSaveStatus('Synced');
+    } catch { setSaveStatus('Local'); }
+}
+function setConn(text, color) {
+    const dot = document.getElementById('conn-dot');
+    const t = document.getElementById('conn-text');
+    if (dot) dot.style.background = color;
+    if (t) t.textContent = text;
+}
 
-        window.renderFileTree = () => {
-            const list = document.getElementById('file-list');
-            list.innerHTML = '';
-            Object.keys(files).sort().forEach(name => {
-                const div = document.createElement('div');
-                div.className = `file-tree-item ${name === activeFile ? 'active' : ''}`;
-                div.innerHTML = `<i data-lucide="file-code" class="w-3.5 h-3.5"></i><span class="truncate uppercase font-bold">${name}</span>`;
-                div.onclick = () => {
-                    activeFile = name;
-                    document.getElementById('mainEditor').value = files[name];
-                    document.getElementById('current-filename').textContent = name;
-                    renderFileTree();
-                };
-                list.appendChild(div);
-            });
-            refreshIcons();
-        };
+// ══════════════════════ AUTH ══════════════════════
+onAuthStateChanged(auth, (user) => {
+    document.getElementById('auth-loading').style.display = 'none';
+    document.getElementById('auth-controls').style.display = user ? 'none' : 'block';
+    if (user) {
+        const name = user.displayName || user.email || ('anon_' + user.uid.substring(0,6));
+        document.getElementById('nav-links').style.display = 'flex';
+        document.getElementById('user-pill').style.display = 'flex';
+        document.getElementById('username').textContent = name.toUpperCase();
+        document.getElementById('greeting-text').textContent = user.isAnonymous ? 'Sandbox_Session' : ('Welcome back, ' + name.split(' ')[0]);
+        syncWithNeon(user);
+        showView('dashboard');
+    } else {
+        document.getElementById('nav-links').style.display = 'none';
+        document.getElementById('user-pill').style.display = 'none';
+        document.getElementById('sync-indicator').style.display = 'none';
+        showView('hero');
+    }
+});
+window.loginAnon = () => signInAnonymously(auth);
+window.loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
+window.loginGithub = () => signInWithPopup(auth, new GithubAuthProvider());
+window.handleLogout = () => { signOut(auth); };
 
-        window.showView = (id) => {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            const target = document.getElementById(id + '-view');
-            if (target) {
-                target.classList.add('active');
-            }
-            refreshIcons();
-        };
+// ══════════════════════ VIEW MANAGEMENT ══════════════════════
+window.showView = (id) => {
+    document.querySelectorAll('.view').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
+    const target = document.getElementById(id + '-view');
+    if (!target) return;
+    if (id === 'workspace') {
+        target.style.display = 'grid';
+        target.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        setTimeout(() => {
+            renderFileTree(); renderTabs(); renderSyntaxPanel();
+            const ed = document.getElementById('mainEditor');
+            if (ed) { ed.value = files[activeFile] || ''; updateGutter(ed); }
+            document.getElementById('current-filename').textContent = activeFile;
+        }, 0);
+    } else {
+        target.style.display = 'flex';
+        target.classList.add('active');
+        document.body.style.overflow = '';
+        if (id === 'dashboard') updateAllUI();
+    }
+};
 
-        window.loginAnon = () => signInAnonymously(auth);
-        window.loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
-        window.loginGithub = () => signInWithPopup(auth, new GithubAuthProvider());
-        window.handleLogout = () => signOut(auth);
+// ══════════════════════ UI ══════════════════════
+function updateAllUI() { renderFileTree(); renderTabs(); renderDashboard(); updateStats(); renderSyntaxPanel(); }
 
-        // Matrix Effect
-        const canvas = document.getElementById('canvas-bg');
-        const ctx = canvas.getContext('2d');
-        let drops = [];
-        window.onresize = () => { 
-            canvas.width = window.innerWidth; 
-            canvas.height = window.innerHeight; 
-            drops = Array(Math.floor(canvas.width/20)).fill(1); 
-        };
-        window.onresize();
-        setInterval(() => {
-            ctx.fillStyle = 'rgba(0,0,0,0.1)'; 
-            ctx.fillRect(0,0,canvas.width,canvas.height);
-            ctx.fillStyle = '#39ff14'; 
-            ctx.font = '15px monospace';
-            drops.forEach((y, i) => {
-                ctx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*20, y*20);
-                if (y*20 > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }, 50);
+function updateStats() {
+    const names = Object.keys(files);
+    const totalLines = names.reduce((acc,n) => acc + files[n].split('\n').length, 0);
+    let fnCount = 0;
+    names.forEach(n => { fnCount += (files[n].match(/^fun\s/gm) || []).length; });
+    const sf = document.getElementById('stat-files'); if(sf) sf.textContent = names.length;
+    const sl = document.getElementById('stat-lines'); if(sl) sl.textContent = totalLines > 999 ? (totalLines/1000).toFixed(1)+'k' : totalLines;
+    const sfn = document.getElementById('stat-fns'); if(sfn) sfn.textContent = fnCount;
+}
 
-        document.getElementById('auth-loading').classList.add('hidden');
-        document.getElementById('auth-controls').classList.remove('hidden');
-        
-        // Initial icon load
-        window.addEventListener('load', refreshIcons);
-    </script>
-</body>
-</html>
+function renderDashboard() {
+    const c = document.getElementById('dashboard-files'); if (!c) return;
+    c.innerHTML = '';
+    const names = Object.keys(files).sort();
+    if (!names.length) { c.innerHTML = '<div style="font-size:10px;color:var(--text-muted);padding:1.5rem 0">No files yet.</div>'; return; }
+    names.forEach(name => {
+        const lines = (files[name].match(/\n/g)||[]).length + 1;
+        const d = document.createElement('div'); d.className = 'file-card';
+        d.innerHTML = `<div class="file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="file-card-name">${name}</div><div class="file-card-meta">${lines} lines · auto-synced</div></div>`;
+        d.onclick = () => { activeFile = name; showView('workspace'); };
+        c.appendChild(d);
+    });
+}
+
+function addActivity(msg) {
+    const ts = new Date().toTimeString().slice(0,8);
+    activityLog.unshift({ ts, msg });
+    if (activityLog.length > 30) activityLog.pop();
+    const c = document.getElementById('activity-lines'); if (!c) return;
+    c.innerHTML = activityLog.slice(0,10).map(a => `<div class="activity-line"><span class="ts">${a.ts}</span><span>${a.msg}</span></div>`).join('');
+}
+
+// ══════════════════════ FILE TREE + TABS ══════════════════════
+window.renderFileTree = () => {
+    const list = document.getElementById('file-list'); if (!list) return;
+    list.innerHTML = '';
+    Object.keys(files).sort().forEach(name => {
+        const d = document.createElement('div');
+        d.className = `file-tree-item${name === activeFile ? ' active' : ''}`;
+        d.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span class="file-tree-name">${name}</span>`;
+        d.onclick = () => openFileInEditor(name);
+        list.appendChild(d);
+    });
+};
+
+window.renderTabs = () => {
+    const c = document.getElementById('ide-tabs'); if (!c) return;
+    const plusBtn = c.querySelector('.tab-new-btn');
+    c.innerHTML = '';
+    Object.keys(files).sort().forEach(name => {
+        const btn = document.createElement('button');
+        btn.className = `ide-tab${name === activeFile ? ' active' : ''}`;
+        btn.innerHTML = `${name} <button class="close-tab" onclick="event.stopPropagation();closeTab('${name}')">×</button>`;
+        btn.onclick = () => openFileInEditor(name);
+        c.appendChild(btn);
+    });
+    if (plusBtn) c.appendChild(plusBtn); else { const b = document.createElement('button'); b.className='tab-new-btn'; b.textContent='＋'; b.onclick=openNewFile; c.appendChild(b); }
+};
+
+window.closeTab = (name) => {
+    if (Object.keys(files).length <= 1) { showToast('Cannot close last file'); return; }
+    delete files[name];
+    if (activeFile === name) activeFile = Object.keys(files)[0];
+    renderTabs(); renderFileTree();
+    const ed = document.getElementById('mainEditor');
+    if (ed) { ed.value = files[activeFile] || ''; updateGutter(ed); }
+    document.getElementById('current-filename').textContent = activeFile;
+};
+
+function openFileInEditor(name) {
+    const ed = document.getElementById('mainEditor');
+    if (ed) files[activeFile] = ed.value;
+    activeFile = name;
+    if (ed) { ed.value = files[name] || ''; updateGutter(ed); ed.focus(); }
+    document.getElementById('current-filename').textContent = name;
+    renderFileTree(); renderTabs();
+    addActivity(`Opened ${name}`);
+}
+
+// ══════════════════════ EDITOR ══════════════════════
+window.handleEditorInput = (el) => {
+    files[activeFile] = el.value;
+    updateGutter(el);
+    clearTimeout(window._saveTimer);
+    window._saveTimer = setTimeout(window.saveFiles, 1400);
+    setSaveStatus('Editing…');
+};
+window.handleEditorKeydown = (e) => {
+    if (e.key === 'Tab') {
+        e.preventDefault();
+        const el = e.target, s = el.selectionStart, end = el.selectionEnd;
+        el.value = el.value.substring(0,s) + '  ' + el.value.substring(end
