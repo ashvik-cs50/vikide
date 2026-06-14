@@ -235,7 +235,7 @@
         .input-modal-actions { display: flex; gap: 8px; }
         .input-modal-ok { flex: 1; }
 
-        /* NEW FILE MODAL */
+        /* NEW FILE MODAL / GENERAL DIALOGS */
         .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; display: flex; align-items: center; justify-content: center; }
         .modal { background: var(--panel); border: 1px solid var(--border); padding: 2rem; min-width: 320px; position: relative; }
         .modal::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
@@ -602,6 +602,17 @@
     </div>
 </div>
 
+<!-- INFO / ERROR CONSOLE MODAL -->
+<div id="info-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeInfoModal()">
+    <div class="modal" style="max-width: 480px;">
+        <div class="modal-title" id="info-modal-title" style="color: #ff5f57;">Domain Authorization Required</div>
+        <div id="info-modal-text" style="font-size: 11px; line-height: 1.8; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; word-break: break-word;"></div>
+        <div class="modal-actions">
+            <button class="btn-primary" style="flex:1; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="closeInfoModal()">Acknowledge</button>
+        </div>
+    </div>
+</div>
+
 <!-- USER INPUT MODAL (for get / getIn) -->
 <div id="input-modal" class="input-modal-backdrop" style="display:none">
     <div class="input-modal">
@@ -769,6 +780,46 @@ if (localStorage.getItem('vik_pro_files')) {
     } catch(e) {}
 }
 
+// ══════════════════════ DIAGNOSTIC DIALOG SYSTEM ══════════════════════
+window.showCustomModal = (title, text) => {
+    document.getElementById('info-modal-title').innerHTML = title;
+    document.getElementById('info-modal-text').innerHTML = text;
+    document.getElementById('info-modal').style.display = 'flex';
+};
+
+window.closeInfoModal = () => {
+    document.getElementById('info-modal').style.display = 'none';
+};
+
+// Handler for authentication exceptions
+function handleAuthError(err) {
+    console.warn("Intercepted Auth Exception:", err);
+    if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('auth/unauthorized-domain'))) {
+        const currentDomain = window.location.hostname || "vikco.qzz.io";
+        window.showCustomModal(
+            "🔒 Firebase Domain Blocked",
+            `Your Firebase auth domain configuration does not permit OAuth operations from your current preview domain:<br/><br/>` +
+            `<span class="text-neon bg-black/40 px-2 py-1 block rounded font-bold text-center border border-white/5 my-2 select-all">${currentDomain}</span>` +
+            `<strong>To resolve this and activate Google/GitHub login:</strong><br/>` +
+            `1. Open your <strong class="text-neon">Firebase Console</strong>.<br/>` +
+            `2. Select your project: <code class="text-white">vikproject-de5f8</code>.<br/>` +
+            `3. Go to <strong class="text-white">Authentication &rarr; Settings &rarr; Authorized domains</strong>.<br/>` +
+            `4. Click <strong>"Add Domain"</strong> and insert <code class="text-neon">${currentDomain}</code>.<br/><br/>` +
+            `<em>Note: You can still click "Enter Anonymous Sandbox" to build, edit, and test your code with Vik AI immediately without OAuth!</em>`
+        );
+    } else {
+        window.showToast(`Auth Error: ${err.message || err}`);
+    }
+}
+
+// Global hook to catch unhandled async auth rejections during startup checks
+window.addEventListener('unhandledrejection', (event) => {
+    if (event.reason && (event.reason.code === 'auth/unauthorized-domain' || (event.reason.message && event.reason.message.includes('auth/unauthorized-domain')))) {
+        event.preventDefault(); // Stop raw red logs in console
+        handleAuthError(event.reason);
+    }
+});
+
 // ══════════════════════ AUTH ══════════════════════
 onAuthStateChanged(auth, (user) => {
     document.getElementById('auth-loading').style.display = 'none';
@@ -789,9 +840,31 @@ onAuthStateChanged(auth, (user) => {
         showView('hero');
     }
 });
-window.loginAnon = () => signInAnonymously(auth);
-window.loginGoogle = () => signInWithPopup(auth, new GoogleAuthProvider());
-window.loginGithub = () => signInWithPopup(auth, new GithubAuthProvider());
+
+window.loginAnon = async () => {
+    try {
+        await signInAnonymously(auth);
+    } catch (err) {
+        handleAuthError(err);
+    }
+};
+
+window.loginGoogle = async () => {
+    try {
+        await signInWithPopup(auth, new GoogleAuthProvider());
+    } catch (err) {
+        handleAuthError(err);
+    }
+};
+
+window.loginGithub = async () => {
+    try {
+        await signInWithPopup(auth, new GithubAuthProvider());
+    } catch (err) {
+        handleAuthError(err);
+    }
+};
+
 window.handleLogout = () => { signOut(auth); };
 
 // ══════════════════════ VIEW MANAGEMENT ══════════════════════
@@ -1528,6 +1601,13 @@ async function fetchGeminiWithRetry(prompt, systemPrompt) {
         }
     }
 }
+
+// Ensure favicon.ico requests don't cause console errors
+const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+link.type = 'image/x-icon';
+link.rel = 'shortcut icon';
+link.href = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>';
+document.getElementsByTagName('head')[0].appendChild(link);
 
 function appendAIMessage(text, sender, isLoading = false) {
     const c = document.getElementById('ai-messages');
