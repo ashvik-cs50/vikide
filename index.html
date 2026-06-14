@@ -557,17 +557,62 @@
             <!-- AI panel -->
             <div class="ide-ai-panel" id="ai-panel">
                 <div class="panel-head">
-                    Vik AI Assistant
-                    <button class="panel-close" onclick="toggleAIPanel()">×</button>
+                    <span>Vik AI Assistant</span>
+                    <div style="display:flex; align-items:center; gap:8px">
+                        <button class="sidebar-action" onclick="toggleAISettings()" title="AI Settings">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        </button>
+                        <button class="panel-close" onclick="toggleAIPanel()">×</button>
+                    </div>
                 </div>
-                <div class="ai-panel-body" id="ai-messages">
-                    <div class="ai-msg system">👾 <strong>Vik AI</strong> — Ask me to explain, write, or fix your Vik Script code. Powered by Gemini.</div>
+
+                <!-- Chat View -->
+                <div id="ai-chat-view" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                    <div class="ai-panel-body" id="ai-messages">
+                        <div class="ai-msg system">👾 <strong>Vik AI</strong> — Ask me to explain, write, or fix your Vik Script code. Powered by Gemini.</div>
+                    </div>
+                    <div class="ai-input-row">
+                        <input type="text" id="ai-input" placeholder="Ask about your code…" onkeydown="if(event.key==='Enter')sendAIMessage()">
+                        <button class="btn-run" style="padding:7px 12px" onclick="sendAIMessage()">
+                            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="ai-input-row">
-                    <input type="text" id="ai-input" placeholder="Ask about your code…" onkeydown="if(event.key==='Enter')sendAIMessage()">
-                    <button class="btn-run" style="padding:7px 12px" onclick="sendAIMessage()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    </button>
+
+                <!-- Settings View -->
+                <div id="ai-settings-view" style="display: none; flex-direction: column; flex: 1; padding: 12px; overflow-y: auto;">
+                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--neon); margin-bottom: 12px;">AI Config & Model</div>
+                    
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Provider Key Strategy</label>
+                        <select id="ai-key-strategy" onchange="handleKeyStrategyChange(this.value)" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 6px; outline: none;">
+                            <option value="env">Default Sandbox Key</option>
+                            <option value="custom">Custom Gemini API Key</option>
+                        </select>
+                    </div>
+
+                    <div id="custom-key-container" style="display: none; margin-bottom: 14px;">
+                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Custom Gemini API Key</label>
+                        <div style="position: relative;">
+                            <input type="password" id="custom-gemini-key" placeholder="AIzaSy..." style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 10px; padding: 6px 30px 6px 6px; outline: none;">
+                            <button onclick="toggleKeyVisibility()" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 9px;">👁️</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Model Selection</label>
+                        <select id="ai-model-select" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 6px; outline: none;">
+                            <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash (Default)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                        </select>
+                    </div>
+
+                    <button class="btn-primary w-full justify-center" style="margin-top: 10px; clip-path: none; padding: 10px; border-radius: 2px;" onclick="saveAISettings()">Save Configuration</button>
+                    
+                    <div style="margin-top: 20px; font-size: 9px; line-height: 1.6; color: var(--text-muted); background: rgba(255,255,255,0.02); padding: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                        <strong>💡 How to get a key:</strong><br/>
+                        Go to <a href="https://aistudio.google.com/" target="_blank" class="text-neon underline">Google AI Studio</a>, create a free Gemini API Key, and paste it here to run custom prompt architectures from any host!
+                    </div>
                 </div>
             </div>
         </div>
@@ -708,6 +753,11 @@ let activeTerminalTab = 'output';
 
 // Gemini API setup
 const apiKey = ""; // Runtime-provided Gemini key
+
+// AI Configuration Preferences
+let aiKeyStrategy = localStorage.getItem('ai_key_strategy') || 'env';
+let customGeminiKey = localStorage.getItem('custom_gemini_key') || '';
+let selectedAIModel = localStorage.getItem('selected_ai_model') || 'gemini-2.5-flash-preview-09-2025';
 
 // ══════════════════════ SYNTAX REFERENCE DATA ══════════════════════
 const SYNTAX_REF = [
@@ -1513,27 +1563,6 @@ async function parseLine(line, lines, index) {
     return index;
 }
 
-function getVal(token) {
-    if (token === undefined || token === null) return 0;
-    if (token === 'true') return true;
-    if (token === 'false') return false;
-    if (!isNaN(parseFloat(token))) return parseFloat(token);
-    if (variables[token] !== undefined) {
-        const v = variables[token];
-        return isNaN(parseFloat(v)) ? v : parseFloat(v);
-    }
-    return token;
-}
-
-function replaceVars(text) {
-    return text.replace(/vari,([a-zA-Z0-9_]+)/g, (match, varName) => {
-        if (variables[varName] !== undefined) {
-            return variables[varName];
-        }
-        return `[vari,${varName} undefined]`;
-    });
-}
-
 // ══════════════════════ GEMINI AI CO-PILOT ══════════════════════
 window.sendAIMessage = async () => {
     const inp = document.getElementById('ai-input');
@@ -1580,10 +1609,16 @@ User question: ${msg}`;
 };
 
 async function fetchGeminiWithRetry(prompt, systemPrompt) {
+    let activeKey = apiKey; // Default empty environment key
+    if (aiKeyStrategy === 'custom' && customGeminiKey) {
+        activeKey = customGeminiKey;
+    }
+
+    const modelToUse = selectedAIModel || "gemini-2.5-flash-preview-09-2025";
     let delay = 1000;
     for (let attempt = 1; attempt <= 5; attempt++) {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${activeKey}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -1626,6 +1661,56 @@ function removeLoadingAIMessage() {
     const el = document.getElementById('ai-loading-bubble');
     if (el) el.remove();
 }
+
+// ══════════════════════ AI PANEL CONFIG TOGGLES ══════════════════════
+window.toggleAISettings = () => {
+    const chatView = document.getElementById('ai-chat-view');
+    const settingsView = document.getElementById('ai-settings-view');
+    if (!chatView || !settingsView) return;
+
+    if (chatView.style.display === 'none') {
+        chatView.style.display = 'flex';
+        settingsView.style.display = 'none';
+    } else {
+        chatView.style.display = 'none';
+        settingsView.style.display = 'flex';
+        // Hydrate current input state
+        document.getElementById('ai-key-strategy').value = aiKeyStrategy;
+        document.getElementById('custom-gemini-key').value = customGeminiKey;
+        document.getElementById('ai-model-select').value = selectedAIModel;
+        window.handleKeyStrategyChange(aiKeyStrategy);
+    }
+};
+
+window.handleKeyStrategyChange = (val) => {
+    const customKeyContainer = document.getElementById('custom-key-container');
+    if (!customKeyContainer) return;
+
+    if (val === 'custom') {
+        customKeyContainer.style.display = 'block';
+    } else {
+        customKeyContainer.style.display = 'none';
+    }
+};
+
+window.toggleKeyVisibility = () => {
+    const keyInput = document.getElementById('custom-gemini-key');
+    if (!keyInput) return;
+    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+};
+
+window.saveAISettings = () => {
+    aiKeyStrategy = document.getElementById('ai-key-strategy').value;
+    customGeminiKey = document.getElementById('custom-gemini-key').value.trim();
+    selectedAIModel = document.getElementById('ai-model-select').value;
+
+    localStorage.setItem('ai_key_strategy', aiKeyStrategy);
+    localStorage.setItem('custom_gemini_key', customGeminiKey);
+    localStorage.setItem('selected_ai_model', selectedAIModel);
+
+    showToast("AI preferences stored successfully!");
+    window.toggleAISettings(); // Return to active chat thread
+};
 
 // ══════════════════════ MATRIX CANVAS ANIMATION ══════════════════════
 const canvas = document.getElementById('canvas-bg');
