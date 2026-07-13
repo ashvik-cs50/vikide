@@ -1,6 +1,5 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
-import { jwtVerify } from 'jose';
 import { queryOne, queryAll, execute, generateId, now } from './db.js';
 import { hashPassword, verifyPassword, authenticate, requireRole } from './middleware.js';
 
@@ -22,7 +21,7 @@ const app = new Hono();
 
 // ─── CORS ───
 app.use('/api/*', cors({
-  origin: (c) => c.env.FRONTEND_URL || '*',
+  origin: (origin, c) => c.env?.FRONTEND_URL || '*',
   credentials: true,
 }));
 
