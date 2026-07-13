@@ -1764,7 +1764,7 @@ window.switchAuthTab = (tab) => {
     if (btn) btn.classList.add('active');
 };
 
-window.showView = (id) => {
+function showView(id) {
     document.querySelectorAll('.view').forEach(v => { v.classList.remove('active','view-enter'); v.style.display = 'none'; });
     const target = document.getElementById(id + '-view');
     if (!target) return;
@@ -1790,7 +1790,7 @@ window.showView = (id) => {
     }
     target.classList.add('active');
     requestAnimationFrame(() => target.classList.add('view-enter'));
-};
+;\nwindow.showView = showView;
 
 function updateAllUI() { renderFileTree(); renderTabs(); renderDashboard(); updateStats(); renderSyntaxPanel(); }
 
