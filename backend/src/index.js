@@ -1,19 +1,20 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { SignJWT } from 'jose';
 import { queryOne, queryAll, execute, generateId, now } from './db.js';
 import { hashPassword, verifyPassword, authenticate, requireRole } from './middleware.js';
 
 // ─── JWT helper ───
-async function signToken(userId, secret, expiresIn = '7d') {
-  const { SignJWT } = await import('jose');
-  const encoder = new TextEncoder();
-  let exp;
-  if (expiresIn === '30d') exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-  else exp = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+function getExpiry(expiresIn) {
+  if (expiresIn === '30d') return Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
+  return Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+}
 
+async function signToken(userId, secret, expiresIn = '7d') {
+  const encoder = new TextEncoder();
   return await new SignJWT({ userId })
     .setProtectedHeader({ alg: 'HS256' })
-    .setExpirationTime(exp)
+    .setExpirationTime(getExpiry(expiresIn))
     .sign(encoder.encode(secret));
 }
 

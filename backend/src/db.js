@@ -4,8 +4,8 @@
  * Run a query that returns all matching rows
  */
 export async function queryAll(db, sql, ...bind) {
-  const stmt = db.prepare(sql);
-  if (bind.length > 0) stmt.bind(...bind);
+  let stmt = db.prepare(sql);
+  if (bind.length > 0) stmt = stmt.bind(...bind);
   const { results } = await stmt.all();
   return results || [];
 }
@@ -14,8 +14,8 @@ export async function queryAll(db, sql, ...bind) {
  * Run a query that returns a single row (or null)
  */
 export async function queryOne(db, sql, ...bind) {
-  const stmt = db.prepare(sql);
-  if (bind.length > 0) stmt.bind(...bind);
+  let stmt = db.prepare(sql);
+  if (bind.length > 0) stmt = stmt.bind(...bind);
   return await stmt.first();
 }
 
@@ -23,8 +23,8 @@ export async function queryOne(db, sql, ...bind) {
  * Run a write query (INSERT, UPDATE, DELETE) - returns D1 result
  */
 export async function execute(db, sql, ...bind) {
-  const stmt = db.prepare(sql);
-  if (bind.length > 0) stmt.bind(...bind);
+  let stmt = db.prepare(sql);
+  if (bind.length > 0) stmt = stmt.bind(...bind);
   return await stmt.run();
 }
 
