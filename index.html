@@ -1790,7 +1790,7 @@ function showView(id) {
     }
     target.classList.add('active');
     requestAnimationFrame(() => target.classList.add('view-enter'));
-;\nwindow.showView = showView;
+}\nwindow.showView = showView;
 
 function updateAllUI() { renderFileTree(); renderTabs(); renderDashboard(); updateStats(); renderSyntaxPanel(); }
 
