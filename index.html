@@ -1063,6 +1063,20 @@
     </div>
 </div>
 
+
+<!-- NEW PROJECT MODAL -->
+<div id="new-project-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeNewProjectModal()">
+    <div class="modal">
+        <div class="modal-title">Create New Cloud Project</div>
+        <input type="text" class="modal-input" id="new-project-name" placeholder="my_project" onkeydown="if(event.key==='Enter')confirmNewProject()">
+        <div style="font-size:8px;color:var(--text-muted);margin-bottom:1rem;letter-spacing:0.08em">Your project will be saved to the cloud.</div>
+        <div class="modal-actions">
+            <button class="btn-primary" style="flex:1;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="confirmNewProject()">Create</button>
+            <button class="modal-cancel" onclick="closeNewProjectModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <!-- INFO MODAL -->
 <div id="info-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeInfoModal()">
     <div class="modal" style="max-width:480px">
@@ -1462,19 +1476,28 @@ window.apiDeleteProject = async (id) => {
 
 // ── Load a cloud project into the editor ──
 window.loadProject = async (project) => {
-    // Check if we already have this project loaded - reuse the file
-    let filename = Object.keys(files).find(f => {
-        return files[f] === project.code || (activeFile === f && currentProjectId === project.id);
-    });
-    if (!filename) {
+    // Use project-file map to avoid creating duplicate files
+    let filename = window._projectFileMap && window._projectFileMap[project.id];
+    
+    if (!filename || !files[filename]) {
         filename = (project.name || 'project').replace(/[^a-zA-Z0-9_\-]/g, '_') + '.vik';
-        files[filename] = project.code || '';
-    } else {
-        // Just update the code
-        files[filename] = project.code || '';
+        // Handle filename collisions by appending a number
+        let base = filename.replace(/.vik$/, '');
+        let counter = 1;
+        while (files[filename] && filename !== Object.keys(files).find(f => window._projectFileMap && window._projectFileMap[project.id] === f)) {
+            filename = base + '_' + counter + '.vik';
+            counter++;
+        }
     }
+    
+    files[filename] = project.code || '';
     activeFile = filename;
     currentProjectId = project.id;
+    
+    // Track mapping
+    if (!window._projectFileMap) window._projectFileMap = {};
+    window._projectFileMap[project.id] = filename;
+    
     localStorage.setItem('vik_current_project_id', project.id);
     localStorage.setItem('vik_pro_files', JSON.stringify(files));
     addActivity('Loaded project: ' + project.name);
@@ -1519,14 +1542,28 @@ window.createNewProject = async () => {
         showToast('Sign in to create cloud projects');
         return;
     }
-    const name = prompt('Project name:', 'my_project');
-    if (!name || !name.trim()) return;
+    document.getElementById('new-project-name').value = '';
+    document.getElementById('new-project-modal').style.display = 'flex';
+    setTimeout(() => document.getElementById('new-project-name').focus(), 100);
+};
+
+window.confirmNewProject = async () => {
+    const name = document.getElementById('new-project-name').value.trim();
+    if (!name) {
+        showToast('Please enter a project name');
+        return;
+    }
+    document.getElementById('new-project-modal').style.display = 'none';
     try {
-        const project = await window.apiCreateProject(name.trim(), '', 'vik', '');
+        const project = await window.apiCreateProject(name, '', 'vik', '');
         await window.loadProject(project);
     } catch(e) {
         showToast('Failed to create project: ' + e.message);
     }
+};
+
+window.closeNewProjectModal = () => {
+    document.getElementById('new-project-modal').style.display = 'none';
 };
 
 // ── Render cloud projects in dashboard ──
@@ -1568,13 +1605,37 @@ window.renderCloudProjects = async () => {
 };
 
 // ── Confirm and delete a project ──
+let _deleteProjectId = null;
+
 window.confirmDeleteProject = async (id) => {
-    if (!confirm('Delete this project? This cannot be undone.')) return;
+    _deleteProjectId = id;
+    document.getElementById('info-modal-title').innerHTML = 'Delete Project';
+    document.getElementById('info-modal-title').style.color = '#f87171';
+    document.getElementById('info-modal-text').innerHTML = 'Are you sure you want to delete this project? This action <strong>cannot be undone</strong>.';
+    document.getElementById('info-modal').style.display = 'flex';
+    // Replace the default button with Delete + Cancel
+    const infoActions = document.querySelector('#info-modal .modal-actions');
+    infoActions.innerHTML = `
+        <button class="btn-primary" style="background:#f87171;color:#fff;flex:1;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);box-shadow:none;flex:1" onclick="executeDeleteProject()">Delete</button>
+        <button class="modal-cancel" onclick="closeInfoModal()">Cancel</button>
+    `;
+};
+
+window.executeDeleteProject = async () => {
+    document.getElementById('info-modal').style.display = 'none';
+    // Restore info modal default
+    document.getElementById('info-modal-title').style.color = '#ff5f57';
+    document.getElementById('info-modal-title').innerHTML = 'System Information';
+    const infoActions = document.querySelector('#info-modal .modal-actions');
+    infoActions.innerHTML = '<button class="btn-primary" style="flex:1;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="closeInfoModal()">Acknowledge</button>';
+    
+    if (!_deleteProjectId) return;
     try {
-        await window.apiDeleteProject(id);
+        await window.apiDeleteProject(_deleteProjectId);
         await renderCloudProjects();
         showToast('Project deleted');
         addActivity('Deleted cloud project');
+        _deleteProjectId = null;
     } catch(e) {
         showToast('Delete failed: ' + e.message);
     }
