@@ -1,32 +1,21 @@
 {
-  "name": "vik-ide-backend",
+  "name": "vikide-api",
   "version": "1.0.0",
-  "description": "VIK IDE Backend - Node.js + Express + Prisma + PostgreSQL",
+  "description": "VIK IDE Backend - Cloudflare Workers + D1 (SQLite)",
   "main": "src/index.js",
   "scripts": {
-    "dev": "node --watch src/index.js",
-    "start": "node src/index.js",
-    "prisma:generate": "npx prisma generate",
-    "prisma:push": "npx prisma db push",
-    "prisma:migrate": "npx prisma migrate dev",
-    "prisma:seed": "node prisma/seed.js",
-    "setup": "npm install && npx prisma generate && npx prisma db push",
-    "postinstall": "npx prisma generate"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 migrations apply vikide-db --remote",
+    "db:seed": "wrangler d1 execute vikide-db --remote --file=seed.sql",
+    "db:init-local": "wrangler d1 migrations apply vikide-db --local",
+    "db:seed-local": "wrangler d1 execute vikide-db --local --file=seed.sql"
   },
   "dependencies": {
-    "@prisma/client": "^6.6.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.7",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.5.0",
-    "helmet": "^8.0.0",
-    "jsonwebtoken": "^9.0.2",
-    "socket.io": "^4.8.1",
-    "uuid": "^11.1.0",
-    "zod": "^3.24.2"
+    "hono": "^4.7.0",
+    "jose": "^5.9.0"
   },
   "devDependencies": {
-    "prisma": "^6.6.0"
+    "wrangler": "^4.0.0"
   }
 }

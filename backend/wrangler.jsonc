@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "vikide-api",
+  "compatibility_date": "2026-06-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "src/index.js",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "vikide-db",
+      "database_id": ""
+    }
+  ],
+  "vars": {
+    "JWT_SECRET": "",
+    "FRONTEND_URL": "https://vikco.qzz.io"
+  }
+}
