@@ -4,3 +4,5 @@
 !.dev.vars.example
 .env*
 !.env.example
+.env
+node_modules/

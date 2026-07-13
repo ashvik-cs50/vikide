@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String   @id @default(cuid())
+  username       String   @unique
+  email          String   @unique
+  passwordHash   String   @map("password_hash")
+  displayName    String?  @map("display_name")
+  profilePicture String?  @map("profile_picture")
+  role           String   @default("student") // student, teacher, admin
+  streak         Int      @default(0)
+  xp             Int      @default(0)
+  level          Int      @default(1)
+  lastLogin      DateTime? @map("last_login")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  authoredLessons   Lesson[]          @relation("LessonAuthor")
+  lessonCompletions  LessonCompletion[]
+  achievements       UserAchievement[]
+  projects           Project[]
+  userDailyChallenges UserDailyChallenge[]
+  loginSessions      LoginSession[]
+
+  @@map("users")
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String   // python, java, web, cpp, algorithms
+  difficulty  String   // easy, medium, hard
+  content     String   // lesson content in markdown-like format
+  order       Int
+  xpReward    Int      @default(50) @map("xp_reward")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  authorId    String?   @map("author_id")
+  author      User?     @relation("LessonAuthor", fields: [authorId], references: [id])
+  completions  LessonCompletion[]
+  assignments  Assignment[]
+
+  @@map("lessons")
+}
+
+model LessonCompletion {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  lessonId  String   @map("lesson_id")
+  completed Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user   User   @relation(fields: [userId], references: [id])
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("lesson_completions")
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  iconUrl     String?  @map("icon_url")
+  xpReward    Int      @default(100) @map("xp_reward")
+  criteria    Json?    // JSON defining how to unlock this achievement
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  achievementId String   @map("achievement_id")
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user        User        @relation(fields: [userId], references: [id])
+  achievement Achievement @relation(fields: [achievementId], references: [id])
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  language    String   @default("javascript")
+  code        String?
+  userId      String   @map("user_id")
+  isPublic    Boolean  @default(false) @map("is_public")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("projects")
+}
+
+model DailyChallenge {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  difficulty  String   @default("easy")
+  language    String   @default("vik")
+  starterCode String?  @map("starter_code")
+  solution    String?
+  xpReward    Int      @default(100) @map("xp_reward")
+  date        DateTime @unique
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  completions UserDailyChallenge[]
+
+  @@map("daily_challenges")
+}
+
+model UserDailyChallenge {
+  id              String   @id @default(cuid())
+  userId          String   @map("user_id")
+  challengeId     String   @map("challenge_id")
+  completed       Boolean  @default(true)
+  code            String?
+  xpEarned        Int      @default(0) @map("xp_earned")
+  completedAt     DateTime @default(now()) @map("completed_at")
+
+  user    User           @relation(fields: [userId], references: [id])
+  challenge DailyChallenge @relation(fields: [challengeId], references: [id])
+
+  @@unique([userId, challengeId])
+  @@map("user_daily_challenges")
+}
+
+model Assignment {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  lessonId    String   @map("lesson_id")
+  dueDate     DateTime? @map("due_date")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id])
+
+  @@map("assignments")
+}
+
+model LoginSession {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  rememberMe Boolean @default(false) @map("remember_me")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("login_sessions")
+}
