@@ -451,6 +451,41 @@
             .tilt-card { max-width: 100%; margin: 0 0.5rem; }
         }
 
+        /* ── PRICING ── */
+        .pricing-section { padding: 6rem 2rem; }
+        .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-top: 3rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .pricing-card {
+            background: var(--panel); border: 1px solid var(--border); padding: 2.5rem 2rem; text-align: center;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(10px); position: relative;
+        }
+        .pricing-card:hover { border-color: var(--neon); transform: translateY(-4px); box-shadow: 0 12px 40px rgba(57,255,20,0.1); }
+        .pricing-card.featured {
+            border-color: var(--neon-mid);
+            background: rgba(57,255,20,0.03);
+            transform: scale(1.03);
+        }
+        .pricing-card.featured:hover { transform: scale(1.03) translateY(-4px); }
+        .pricing-card.featured::before { content: 'POPULAR'; position: absolute; top: 10px; right: 10px; font-size: 7px; font-weight: 900; letter-spacing: 0.2em; color: #000; background: var(--neon); padding: 2px 8px; }
+        .pricing-name { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #fff; margin-bottom: 0.75rem; }
+        .pricing-price { font-size: 3rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; margin-bottom: 0.25rem; }
+        .pricing-currency { font-size: 1rem; vertical-align: super; }
+        .pricing-period { font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 1.5rem; }
+        .pricing-features { list-style: none; padding: 0; margin: 0 0 1.5rem; text-align: center; }
+        .pricing-features li { font-size: 10px; color: var(--text-muted); padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        .pricing-features li::before { content: '✦ '; color: var(--neon); opacity: 0.5; }
+
+        /* ── COMMUNITY STATS ── */
+        .stats-community {
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            padding: 3rem 2rem;
+            background: rgba(5,5,8,0.4); backdrop-filter: blur(10px);
+            display: flex; justify-content: center; gap: 4rem; flex-wrap: wrap;
+        }
+        .community-stat { text-align: center; }
+        .community-stat-num { font-size: 2.5rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; }
+        .community-stat-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 4px; }
+
         /* AI Settings */
         select { -webkit-appearance: none; }
     </style>
@@ -671,6 +706,62 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- PRICING -->
+    <div class="pricing-section">
+        <div style="max-width:1100px;margin:0 auto;text-align:center">
+            <p class="section-label reveal">Plans & Pricing</p>
+            <h2 class="section-title reveal reveal-delay-1">Start free.<br/><span style="color:var(--neon)">Scale when ready.</span></h2>
+            <div class="pricing-grid">
+                <div class="pricing-card reveal">
+                    <div class="pricing-name">Sandbox</div>
+                    <div class="pricing-price"><span class="pricing-currency">$</span>0</div>
+                    <div class="pricing-period">Forever free</div>
+                    <ul class="pricing-features">
+                        <li>Full Vik Script interpreter</li>
+                        <li>Local file storage</li>
+                        <li>Syntax reference panel</li>
+                        <li>Anonymous sandbox access</li>
+                    </ul>
+                    <button class="btn-outline" onclick="loginAnon()" style="width:100%">Try Free</button>
+                </div>
+                <div class="pricing-card featured reveal reveal-delay-1">
+                    <div class="pricing-name">Pro</div>
+                    <div class="pricing-price"><span class="pricing-currency">$</span>9</div>
+                    <div class="pricing-period">Per month</div>
+                    <ul class="pricing-features">
+                        <li>Everything in Sandbox</li>
+                        <li>Cloud project sync</li>
+                        <li>AI co-pilot (Gemini)</li>
+                        <li>Priority support</li>
+                        <li>Advanced analytics</li>
+                    </ul>
+                    <button class="btn-primary" onclick="loginAnon()" style="width:100%;justify-content:center">Get Pro</button>
+                </div>
+                <div class="pricing-card reveal reveal-delay-2">
+                    <div class="pricing-name">Team</div>
+                    <div class="pricing-price"><span class="pricing-currency">$</span>29</div>
+                    <div class="pricing-period">Per month</div>
+                    <ul class="pricing-features">
+                        <li>Everything in Pro</li>
+                        <li>Team workspaces</li>
+                        <li>Teacher dashboard</li>
+                        <li>Custom lesson creation</li>
+                        <li>Student progress tracking</li>
+                    </ul>
+                    <button class="btn-outline" onclick="loginAnon()" style="width:100%">Contact Sales</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- COMMUNITY STATS -->
+    <div class="stats-community">
+        <div class="community-stat reveal"><div class="community-stat-num" id="stat-users">0</div><div class="community-stat-label">Active Coders</div></div>
+        <div class="community-stat reveal reveal-delay-1"><div class="community-stat-num" id="stat-projects">0</div><div class="community-stat-label">Projects Created</div></div>
+        <div class="community-stat reveal reveal-delay-2"><div class="community-stat-num" id="stat-lessons">0</div><div class="community-stat-label">Lessons Completed</div></div>
+        <div class="community-stat reveal reveal-delay-3"><div class="community-stat-num" id="stat-xp">0</div><div class="community-stat-label">Total XP Earned</div></div>
     </div>
 
     <!-- FOOTER -->
@@ -1838,6 +1929,46 @@ window.downloadFile = () => {
     showToast('Downloaded ' + activeFile);
 };
 
+// Animate community stats counters
+function animateStats() {
+    const stats = [
+        { id: 'stat-users', target: 1247 },
+        { id: 'stat-projects', target: 3852 },
+        { id: 'stat-lessons', target: 8961 },
+        { id: 'stat-xp', target: 45280 }
+    ];
+    stats.forEach(s => {
+        const el = document.getElementById(s.id);
+        if (!el) return;
+        const duration = 2000;
+        const start = performance.now();
+        const target = s.target;
+        function update(now) {
+            const elapsed = now - start;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.floor(eased * target);
+            if (progress < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    });
+}
+
+// Observe community stats section to trigger animation on scroll
+const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            animateStats();
+            statsObserver.unobserve(e.target);
+        }
+    });
+}, { threshold: 0.3 });
+
+// Wait for DOM then observe
+setTimeout(() => {
+    const statsSection = document.querySelector('.stats-community');
+    if (statsSection) statsObserver.observe(statsSection);
+}, 500);
 window.onload = () => {
     updateAllUI();
     setTimeout(() => {
