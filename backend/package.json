@@ -10,7 +10,8 @@
     "prisma:push": "npx prisma db push",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-    "setup": "npm install && npx prisma generate && npx prisma db push"
+    "setup": "npm install && npx prisma generate && npx prisma db push",
+    "postinstall": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
