@@ -1,46 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <link rel="icon" type="image/svg+xml" href="/icon.svg">
-    <link rel="apple-touch-icon" href="/icon.svg">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vik Pro | Ultimate Cloud IDE</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,500;0,700;0,800;1,400;1,700;1,800&display=swap" rel="stylesheet">
-
     <style>
         :root {
             --neon: #39ff14;
-            --neon-dim: rgba(57,255,20,0.10);
-            --neon-mid: rgba(57,255,20,0.35);
-            --bg: #070707;
-            --panel: #0d0d0d;
-            --border: rgba(57,255,20,0.14);
-            --border-bright: rgba(57,255,20,0.45);
+            --neon-dim: rgba(57,255,20,0.08);
+            --neon-mid: rgba(57,255,20,0.30);
+            --bg: #050508;
+            --panel: rgba(10,12,18,0.85);
+            --panel-solid: #0a0c12;
+            --border: rgba(57,255,20,0.12);
+            --border-bright: rgba(57,255,20,0.40);
             --text-muted: rgba(255,255,255,0.35);
-            --text-dim: rgba(255,255,255,0.12);
+            --text-dim: rgba(255,255,255,0.10);
+            --glass: rgba(10,14,22,0.72);
+            --glass-border: rgba(57,255,20,0.18);
         }
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
         body { background: var(--bg); color: #d4d4d4; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-thumb { background: var(--neon); border-radius: 10px; }
-        #canvas-bg { position: fixed; inset: 0; z-index: 0; opacity: 0.12; pointer-events: none; }
+
+        /* ── 3D WEBGL CANVAS ── */
+        #canvas-3d { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+        /* ── VIEWS ── */
         .view { display: none; min-height: 100vh; flex-direction: column; position: relative; z-index: 1; }
         .view.active { display: flex; }
+        .view-enter { animation: viewFadeIn 0.55s cubic-bezier(0.22,1,0.36,1) forwards; }
+        @keyframes viewFadeIn {
+            from { opacity: 0; transform: translateY(18px) scale(0.985); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-        /* NAV */
-        nav { position: sticky; top: 0; z-index: 100; height: 64px; background: rgba(7,7,7,0.94); border-bottom: 1px solid var(--border); backdrop-filter: blur(20px); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; }
+        /* ── GLASSMORPHISM NAV ── */
+        nav {
+            position: sticky; top: 0; z-index: 200;
+            height: 64px;
+            background: rgba(5,5,8,0.6);
+            border-bottom: 1px solid var(--glass-border);
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 2rem;
+            box-shadow: 0 1px 0 rgba(57,255,20,0.06), 0 8px 32px rgba(0,0,0,0.4);
+        }
         .nav-logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .nav-logo-badge { background: var(--neon); color: #000; font-weight: 900; font-style: italic; font-size: 1.1rem; padding: 2px 10px; transition: transform 0.2s; }
-        .nav-logo:hover .nav-logo-badge { transform: scale(1.08); }
+        .nav-logo-badge {
+            background: var(--neon); color: #000; font-weight: 900; font-style: italic;
+            font-size: 1.1rem; padding: 2px 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 12px rgba(57,255,20,0.5);
+        }
+        .nav-logo:hover .nav-logo-badge { transform: scale(1.08) rotate(-2deg); box-shadow: 0 0 24px rgba(57,255,20,0.8); }
         .nav-logo-text { font-weight: 900; font-style: italic; font-size: 1rem; letter-spacing: -0.04em; color: #fff; text-transform: uppercase; }
         .nav-logo-text span { color: var(--neon); }
         .nav-links { display: flex; align-items: center; gap: 1.5rem; }
-        .nav-link { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; color: #fff; background: none; border: none; cursor: pointer; transition: opacity 0.2s, color 0.2s; font-family: inherit; }
-        .nav-link:hover { opacity: 1; color: var(--neon); }
+        .nav-link {
+            display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.5; color: #fff;
+            background: none; border: none; cursor: pointer;
+            transition: opacity 0.2s, color 0.2s, transform 0.2s; font-family: inherit;
+        }
+        .nav-link:hover { opacity: 1; color: var(--neon); transform: translateY(-1px); }
         .nav-right { display: flex; align-items: center; gap: 1rem; }
         .sync-badge { font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--neon); background: var(--neon-dim); padding: 3px 10px; border-radius: 2px; }
         .user-pill { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 999px; padding: 4px 4px 4px 14px; }
@@ -48,169 +77,264 @@
         .btn-icon { background: rgba(255,255,255,0.08); border: none; color: #fff; cursor: pointer; padding: 5px; border-radius: 999px; display: flex; transition: background 0.2s, color 0.2s; }
         .btn-icon:hover { background: rgba(239,68,68,0.2); color: #f87171; }
 
-        /* HELPERS */
+        /* ── SHARED HELPERS ── */
         .text-neon { color: var(--neon); }
-        .glow { text-shadow: 0 0 20px var(--neon), 0 0 40px var(--neon); }
-        .btn-primary { background: var(--neon); color: #000; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; padding: 14px 32px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%); transition: filter 0.2s, transform 0.15s; font-family: inherit; }
-        .btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
-        .btn-outline { background: transparent; color: var(--neon); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; font-size: 10px; padding: 11px 24px; border: 1px solid var(--neon-mid); cursor: pointer; transition: background 0.2s, border-color 0.2s; font-family: inherit; }
-        .btn-outline:hover { background: var(--neon-dim); border-color: var(--neon); }
+        .glow { text-shadow: 0 0 20px var(--neon), 0 0 60px rgba(57,255,20,0.4); }
 
-        /* HERO */
-        #hero-view { align-items: stretch; justify-content: flex-start; overflow-y: auto; }
-        .hero-above-fold { min-height: calc(100vh - 64px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center; }
-        .hero-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase; color: var(--neon); opacity: 0.6; margin-bottom: 2rem; }
-        .hero-headline { font-size: clamp(3rem, 10vw, 9rem); font-weight: 900; font-style: italic; line-height: 0.85; letter-spacing: -0.04em; color: #fff; text-transform: uppercase; margin-bottom: 0.5rem; }
-        .hero-headline .accent { color: var(--neon); text-shadow: 0 0 40px var(--neon), 0 0 80px rgba(57,255,20,0.3); }
+        .btn-primary {
+            background: var(--neon); color: #000; font-weight: 900; font-style: italic;
+            text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px;
+            padding: 14px 32px; border: none; cursor: pointer;
+            display: inline-flex; align-items: center; gap: 8px;
+            clip-path: polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);
+            transition: filter 0.2s, transform 0.15s, box-shadow 0.2s; font-family: inherit;
+            box-shadow: 0 0 20px rgba(57,255,20,0.3);
+        }
+        .btn-primary:hover { filter: brightness(1.2); transform: translateY(-2px); box-shadow: 0 0 40px rgba(57,255,20,0.6); }
+        .btn-outline {
+            background: transparent; color: var(--neon); font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; font-size: 10px; padding: 11px 24px;
+            border: 1px solid var(--neon-mid); cursor: pointer;
+            transition: background 0.25s, border-color 0.25s, transform 0.2s, box-shadow 0.25s; font-family: inherit;
+        }
+        .btn-outline:hover { background: var(--neon-dim); border-color: var(--neon); transform: translateY(-1px); box-shadow: 0 0 20px rgba(57,255,20,0.2); }
+
+        /* ── REVEAL ANIMATIONS ── */
+        .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1); }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.45s; }
+
+        /* ── HERO ── */
+        #hero-view { align-items: stretch; overflow-y: auto; }
+        .hero-above-fold {
+            min-height: calc(100vh - 64px); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 4rem 2rem; text-align: center;
+        }
+        .hero-eyebrow { font-size: 9px; font-weight: 700; letter-spacing: 0.5em; text-transform: uppercase; color: var(--neon); opacity: 0.7; margin-bottom: 2rem; }
+        .hero-headline {
+            font-size: clamp(3rem,10vw,9rem); font-weight: 900; font-style: italic;
+            line-height: 0.85; letter-spacing: -0.04em; color: #fff; text-transform: uppercase; margin-bottom: 0.5rem;
+            filter: drop-shadow(0 0 60px rgba(57,255,20,0.15));
+        }
+        .hero-headline .accent {
+            color: var(--neon);
+            text-shadow: 0 0 40px var(--neon), 0 0 100px rgba(57,255,20,0.4), 0 0 200px rgba(57,255,20,0.15);
+        }
         .hero-sub { font-size: 11px; color: var(--text-muted); letter-spacing: 0.08em; max-width: 480px; line-height: 2; margin: 2rem auto 3rem; }
-        .auth-card { background: var(--panel); border: 1px solid var(--border); width: 100%; max-width: 360px; margin: 0 auto; padding: 2rem; position: relative; }
-        .auth-card::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+
+        /* 3D TILT CARD */
+        .tilt-card {
+            background: var(--glass); border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            width: 100%; max-width: 360px; margin: 0 auto; padding: 2rem;
+            position: relative; transform-style: preserve-3d;
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.6), 0 0 0 1px rgba(57,255,20,0.08);
+        }
+        .tilt-card::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
+        .tilt-card::after {
+            content: ''; position: absolute; inset: 0; opacity: 0;
+            background: radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(57,255,20,0.08) 0%, transparent 60%);
+            transition: opacity 0.3s; pointer-events: none; border-radius: inherit;
+        }
+        .tilt-card:hover::after { opacity: 1; }
+
         .auth-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1.5rem; }
-        .auth-btn { width: 100%; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.2s; margin-bottom: 10px; }
+        .auth-btn { width: 100%; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; border: none; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.25s; margin-bottom: 10px; }
         .auth-btn-google { background: #fff; color: #111; }
-        .auth-btn-google:hover { background: var(--neon); color: #000; }
-        .auth-btn-github { background: #1a1a2e; color: #fff; border: 1px solid rgba(255,255,255,0.12); }
-        .auth-btn-github:hover { background: var(--neon); color: #000; border-color: var(--neon); }
+        .auth-btn-google:hover { background: var(--neon); color: #000; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(57,255,20,0.3); }
+        .auth-btn-github { background: rgba(26,26,46,0.9); color: #fff; border: 1px solid rgba(255,255,255,0.12); }
+        .auth-btn-github:hover { background: var(--neon); color: #000; border-color: var(--neon); transform: translateY(-1px); }
         .auth-divider { text-align: center; font-size: 9px; color: var(--text-dim); letter-spacing: 0.2em; margin: 14px 0; }
-        .auth-anon { background: none; border: none; width: 100%; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color 0.2s; }
+        .auth-anon { background: none; border: none; width: 100%; font-family: inherit; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; padding: 8px; transition: color 0.2s; }
         .auth-anon:hover { color: var(--neon); }
-        .features-section { padding: 6rem 2rem; background: rgba(0,0,0,0.4); }
-        .section-label { font-size: 9px; font-weight: 700; letter-spacing: 0.4em; text-transform: uppercase; color: var(--neon); opacity: 0.7; margin-bottom: 1rem; }
-        .section-title { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; font-style: italic; text-transform: uppercase; color: #fff; line-height: 0.9; letter-spacing: -0.03em; }
-        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1px; background: var(--border); margin-top: 4rem; }
-        .feature-card { background: var(--bg); padding: 2.5rem 2rem; transition: background 0.2s; }
-        .feature-card:hover { background: rgba(57,255,20,0.03); }
-        .feature-icon { width: 40px; height: 40px; background: var(--neon-dim); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
-        .feature-icon svg { width: 18px; height: 18px; stroke: var(--neon); }
-        .feature-name { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; margin-bottom: 0.75rem; }
-        .feature-desc { font-size: 10px; color: var(--text-muted); line-height: 1.8; }
-        .stats-bar { border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; gap: 4rem; overflow-x: auto; }
+
+        /* STATS BAR */
+        .stats-bar {
+            border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem; display: flex; gap: 4rem; overflow-x: auto;
+            background: rgba(5,5,8,0.5);
+            backdrop-filter: blur(10px);
+        }
         .stat-item { flex-shrink: 0; }
         .stat-num { font-size: 2rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; }
         .stat-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 4px; }
+
+        /* FEATURES */
+        .features-section { padding: 6rem 2rem; }
+        .section-label { font-size: 9px; font-weight: 700; letter-spacing: 0.4em; text-transform: uppercase; color: var(--neon); opacity: 0.7; margin-bottom: 1rem; }
+        .section-title { font-size: clamp(2rem,5vw,3.5rem); font-weight: 900; font-style: italic; text-transform: uppercase; color: #fff; line-height: 0.9; letter-spacing: -0.03em; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(260px,1fr)); gap: 1px; background: var(--border); margin-top: 4rem; }
+        .feature-card {
+            background: var(--bg); padding: 2.5rem 2rem;
+            transition: background 0.3s, transform 0.3s; position: relative; overflow: hidden;
+        }
+        .feature-card::before {
+            content: ''; position: absolute; inset: 0; opacity: 0;
+            background: radial-gradient(circle at 50% 0%, rgba(57,255,20,0.06) 0%, transparent 70%);
+            transition: opacity 0.4s;
+        }
+        .feature-card:hover { background: rgba(57,255,20,0.025); transform: translateY(-2px); }
+        .feature-card:hover::before { opacity: 1; }
+        .feature-icon { width: 40px; height: 40px; background: var(--neon-dim); border: 1px solid var(--border-bright); display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; transition: box-shadow 0.3s, border-color 0.3s; }
+        .feature-card:hover .feature-icon { box-shadow: 0 0 20px rgba(57,255,20,0.3); border-color: var(--neon); }
+        .feature-icon svg { width: 18px; height: 18px; stroke: var(--neon); }
+        .feature-name { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; margin-bottom: 0.75rem; }
+        .feature-desc { font-size: 10px; color: var(--text-muted); line-height: 1.8; }
+
+        /* CODE WINDOW */
         .code-preview-section { padding: 6rem 2rem; }
-        .code-window { max-width: 860px; margin: 3rem auto 0; border: 1px solid var(--border); background: var(--panel); position: relative; }
+        .code-window {
+            max-width: 860px; margin: 3rem auto 0;
+            border: 1px solid var(--border);
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            position: relative;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(57,255,20,0.06);
+            transition: transform 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.4s;
+        }
+        .code-window:hover { transform: translateY(-4px) perspective(1000px) rotateX(1deg); box-shadow: 0 40px 100px rgba(0,0,0,0.7), 0 0 60px rgba(57,255,20,0.08); }
         .code-window::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
         .code-window-bar { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border); }
         .dot { width: 8px; height: 8px; border-radius: 50%; }
         .code-window-title { font-size: 9px; color: var(--text-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-left: auto; }
         .code-window-body { padding: 1.5rem 2rem; font-size: 12px; line-height: 2; overflow-x: auto; }
-        .kw { color: #bb9af7; } .fn { color: #7dcfff; } .str { color: #9ece6a; } .cmt { color: rgba(255,255,255,0.22); } .num { color: #ff9e64; } .punct { color: rgba(255,255,255,0.4); } .vikvar { color: #e0af68; }
-        .cta-section { padding: 8rem 2rem; text-align: center; background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(57,255,20,0.06) 0%, transparent 70%); }
+        .kw{color:#bb9af7}.fn{color:#7dcfff}.str{color:#9ece6a}.cmt{color:rgba(255,255,255,0.22)}.num{color:#ff9e64}.punct{color:rgba(255,255,255,0.4)}.vikvar{color:#e0af68}
 
-        /* DASHBOARD */
+        /* CTA */
+        .cta-section {
+            padding: 8rem 2rem; text-align: center;
+            background: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(57,255,20,0.05) 0%, transparent 70%);
+        }
+
+        /* ── DASHBOARD ── */
         #dashboard-view { overflow-y: auto; }
         .dashboard-content { max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 6rem; }
         .dashboard-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 3rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 1rem; }
-        .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--border); margin-bottom: 3rem; }
-        .stat-card { background: var(--panel); padding: 1.5rem; }
+        .stats-row { display: grid; grid-template-columns: repeat(auto-fit,minmax(150px,1fr)); gap: 1px; background: var(--border); margin-bottom: 3rem; }
+        .stat-card {
+            background: var(--panel); backdrop-filter: blur(10px); padding: 1.5rem;
+            transition: background 0.3s, transform 0.3s;
+        }
+        .stat-card:hover { background: rgba(57,255,20,0.06); transform: translateY(-2px); }
         .stat-card-num { font-size: 2rem; font-weight: 900; font-style: italic; color: var(--neon); line-height: 1; }
         .stat-card-label { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-muted); margin-top: 6px; }
-        .quick-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; margin-bottom: 3rem; }
-        .quick-action { background: var(--panel); border: 1px solid var(--border); padding: 1.5rem; cursor: pointer; transition: border-color 0.2s, background 0.2s; display: flex; flex-direction: column; gap: 1rem; }
-        .quick-action:hover { border-color: var(--neon); background: var(--neon-dim); }
+        .quick-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(190px,1fr)); gap: 1rem; margin-bottom: 3rem; }
+        .quick-action {
+            background: var(--panel); border: 1px solid var(--border); padding: 1.5rem;
+            cursor: pointer; display: flex; flex-direction: column; gap: 1rem;
+            transition: border-color 0.25s, background 0.25s, transform 0.25s, box-shadow 0.25s;
+            backdrop-filter: blur(10px);
+        }
+        .quick-action:hover { border-color: var(--neon); background: var(--neon-dim); transform: translateY(-3px) scale(1.01); box-shadow: 0 8px 30px rgba(57,255,20,0.15); }
         .quick-action-icon svg { width: 20px; height: 20px; stroke: var(--neon); }
         .quick-action-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #fff; }
         .quick-action-desc { font-size: 9px; color: var(--text-muted); line-height: 1.7; }
         .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
         .section-head-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); }
-        .files-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
-        .file-card { background: var(--panel); border: 1px solid var(--border); padding: 1.25rem; cursor: pointer; transition: border-color 0.2s; display: flex; align-items: center; gap: 12px; }
-        .file-card:hover { border-color: var(--neon); }
+        .files-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 1rem; }
+        .file-card {
+            background: var(--panel); border: 1px solid var(--border); padding: 1.25rem;
+            cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+            backdrop-filter: blur(10px);
+        }
+        .file-card:hover { border-color: var(--neon); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(57,255,20,0.12); }
         .file-card-icon { width: 32px; height: 32px; background: var(--neon-dim); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .file-card-icon svg { width: 14px; height: 14px; stroke: var(--neon); }
         .file-card-name { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fff; letter-spacing: 0.05em; }
         .file-card-meta { font-size: 8px; color: var(--text-muted); margin-top: 3px; }
-        .activity-feed { border: 1px solid var(--border); background: var(--panel); }
+        .activity-feed { border: 1px solid var(--border); background: var(--panel); backdrop-filter: blur(10px); }
         .activity-feed-head { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); display: flex; align-items: center; gap: 8px; }
         .activity-feed-head .pulse { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); animation: pulse 2s infinite; }
         .activity-line { padding: 8px 16px; font-size: 10px; color: var(--text-muted); border-bottom: 1px solid rgba(255,255,255,0.03); display: flex; gap: 12px; }
         .activity-line .ts { color: var(--neon); opacity: 0.5; font-size: 9px; flex-shrink: 0; }
-        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.3} }
 
-        /* WORKSPACE */
+        /* ── WORKSPACE ── */
         #workspace-view { height: 100vh; max-height: 100vh; overflow: hidden; display: grid !important; grid-template-rows: 48px 1fr 200px; }
-        .ide-tabbar { padding: 0 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: #080808; height: 48px; overflow: hidden; }
+        .ide-tabbar { padding: 0 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: rgba(5,5,8,0.8); backdrop-filter: blur(20px); height: 48px; overflow: hidden; }
         .ide-tabs { display: flex; align-items: center; height: 100%; overflow-x: auto; flex: 1; }
-        .ide-tab { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 100%; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); cursor: pointer; border-right: 1px solid var(--border); border-bottom: 2px solid transparent; white-space: nowrap; background: none; border-top: none; border-left: none; font-family: inherit; transition: color 0.15s; }
+        .ide-tab { display: flex; align-items: center; gap: 6px; padding: 0 14px; height: 100%; font-size: 10px; font-weight: 600; letter-spacing: 0.04em; color: var(--text-muted); cursor: pointer; border-right: 1px solid var(--border); border-bottom: 2px solid transparent; white-space: nowrap; background: none; border-top: none; border-left: none; font-family: inherit; transition: color 0.15s, background 0.2s; }
         .ide-tab:hover { color: #fff; }
-        .ide-tab.active { color: var(--neon); border-bottom-color: var(--neon); background: var(--neon-dim); }
+        .ide-tab.active { color: var(--neon); border-bottom-color: var(--neon); background: rgba(57,255,20,0.04); }
         .ide-tab .close-tab { opacity: 1; font-size: 11px; color: var(--text-muted); margin-left: 6px; background: none; border: none; cursor: pointer; line-height: 1; font-family: inherit; }
         .ide-tab .close-tab:hover { color: #f87171; }
         .tab-new-btn { padding: 0 14px; height: 100%; display: flex; align-items: center; color: var(--text-muted); cursor: pointer; font-size: 14px; background: none; border: none; transition: color 0.15s; }
         .tab-new-btn:hover { color: var(--neon); }
         .ide-toolbar { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
-        .ide-toolbar-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px 10px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 5px; font-family: inherit; transition: color 0.15s; }
-        .ide-toolbar-btn:hover { color: var(--neon); }
+        .ide-toolbar-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 5px 10px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; display: flex; align-items: center; gap: 5px; font-family: inherit; transition: color 0.15s, transform 0.15s; }
+        .ide-toolbar-btn:hover { color: var(--neon); transform: translateY(-1px); }
         .ide-toolbar-btn svg { width: 11px; height: 11px; stroke: currentColor; }
         .toolbar-sep { width: 1px; height: 18px; background: var(--border); margin: 0 3px; }
         .save-status-badge { font-size: 9px; color: var(--text-muted); letter-spacing: 0.1em; text-transform: uppercase; padding: 0 8px; }
 
         /* IDE BODY */
         .ide-body { display: grid; grid-template-columns: 220px 1fr; overflow: hidden; flex: 1; }
-        .ide-sidebar { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .ide-sidebar { background: rgba(8,10,16,0.7); backdrop-filter: blur(10px); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
         .sidebar-head { padding: 8px 12px; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-dim); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
         .sidebar-action { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; transition: color 0.15s; display: flex; }
         .sidebar-action:hover { color: var(--neon); }
         .sidebar-action svg { width: 12px; height: 12px; stroke: currentColor; }
         .file-tree { flex: 1; overflow-y: auto; padding: 4px 0; }
-        .file-tree-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 10px; cursor: pointer; border-left: 2px solid transparent; transition: all 0.15s; color: rgba(255,255,255,0.45); }
+        .file-tree-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; font-size: 10px; cursor: pointer; border-left: 2px solid transparent; transition: all 0.2s; color: rgba(255,255,255,0.45); }
         .file-tree-item:hover { background: rgba(255,255,255,0.04); color: #fff; }
-        .file-tree-item.active { background: var(--neon-dim); border-left-color: var(--neon); color: var(--neon); }
+        .file-tree-item.active { background: rgba(57,255,20,0.06); border-left-color: var(--neon); color: var(--neon); }
         .file-tree-item svg { width: 11px; height: 11px; stroke: currentColor; flex-shrink: 0; }
         .file-tree-name { font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sidebar-footer { border-top: 1px solid var(--border); padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-        .sidebar-conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); flex-shrink: 0; }
+        .sidebar-conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--neon); flex-shrink: 0; animation: pulse 2s infinite; }
         .sidebar-conn-text { font-size: 9px; color: var(--text-muted); letter-spacing: 0.08em; }
 
-        /* SYNTAX PANEL */
-        .ide-syntax-panel { background: #0a0a0a; border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.25s; display: flex; flex-direction: column; flex-shrink: 0; }
+        /* PANELS */
+        .ide-syntax-panel { background: rgba(8,10,16,0.8); backdrop-filter: blur(10px); border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.3s cubic-bezier(0.22,1,0.36,1); display: flex; flex-direction: column; flex-shrink: 0; }
         .ide-syntax-panel.open { width: 280px; }
         .panel-head { padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 9px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
-        .panel-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; }
+        .panel-close { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px; line-height: 1; transition: color 0.15s; }
         .panel-close:hover { color: #fff; }
-
-        /* Syntax ref */
         .syntax-body { flex: 1; overflow-y: auto; padding: 10px; }
         .syn-group { margin-bottom: 14px; }
         .syn-group-title { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.2em; color: var(--neon); margin-bottom: 6px; opacity: 0.7; }
-        .syn-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 7px 10px; margin-bottom: 4px; cursor: pointer; transition: border-color 0.15s; }
-        .syn-item:hover { border-color: var(--neon); }
+        .syn-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 7px 10px; margin-bottom: 4px; cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.2s; }
+        .syn-item:hover { border-color: var(--neon); background: rgba(57,255,20,0.04); transform: translateX(3px); }
         .syn-item-cmd { font-size: 11px; color: #e0af68; font-weight: 700; }
         .syn-item-desc { font-size: 9px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
         .syn-insert-hint { font-size: 8px; color: var(--neon); opacity: 0.5; margin-top: 2px; }
 
-        /* AI panel */
-        .ide-ai-panel { background: #0a0a0a; border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.25s; display: flex; flex-direction: column; flex-shrink: 0; }
+        .ide-ai-panel { background: rgba(8,10,16,0.8); backdrop-filter: blur(10px); border-left: 1px solid var(--border); width: 0; overflow: hidden; transition: width 0.3s cubic-bezier(0.22,1,0.36,1); display: flex; flex-direction: column; flex-shrink: 0; }
         .ide-ai-panel.open { width: 300px; }
         .ai-panel-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .ai-msg { padding: 9px 11px; font-size: 10px; line-height: 1.7; border-radius: 2px; }
+        .ai-msg { padding: 9px 11px; font-size: 10px; line-height: 1.7; border-radius: 2px; animation: msgSlideIn 0.3s cubic-bezier(0.22,1,0.36,1); }
+        @keyframes msgSlideIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
         .ai-msg.system { background: var(--neon-dim); border: 1px solid var(--border-bright); color: rgba(255,255,255,0.7); }
         .ai-msg.user { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); align-self: flex-end; }
         .ai-msg.assistant { background: rgba(57,255,20,0.04); border: 1px solid var(--border); color: rgba(255,255,255,0.85); align-self: flex-start; }
         .ai-input-row { display: flex; gap: 6px; padding: 9px; border-top: 1px solid var(--border); flex-shrink: 0; }
-        #ai-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 7px 10px; outline: none; }
-        #ai-input:focus { border-color: var(--neon); }
+        #ai-input { flex: 1; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 7px 10px; outline: none; transition: border-color 0.2s; }
+        #ai-input:focus { border-color: var(--neon); box-shadow: 0 0 0 1px rgba(57,255,20,0.2); }
         #ai-input::placeholder { color: var(--text-dim); }
 
-        /* EDITOR AREA */
+        /* EDITOR */
         .ide-editor-wrap { display: flex; flex: 1; overflow: hidden; }
-        .ide-editor-area { display: flex; flex-direction: column; overflow: hidden; background: #090909; flex: 1; }
-        .editor-statusbar { padding: 0 14px; height: 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: var(--panel); flex-shrink: 0; }
+        .ide-editor-area { display: flex; flex-direction: column; overflow: hidden; background: rgba(6,7,10,0.6); flex: 1; }
+        .editor-statusbar { padding: 0 14px; height: 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(8,10,16,0.8); backdrop-filter: blur(10px); flex-shrink: 0; }
         .statusbar-left { display: flex; align-items: center; gap: 14px; }
         .status-item { font-size: 9px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
         .status-item.active { color: var(--neon); }
         .status-item svg { width: 10px; height: 10px; stroke: currentColor; }
         .editor-main { display: flex; flex: 1; overflow: hidden; position: relative; }
-        .editor-gutter { padding: 1.25rem 10px 1.25rem 0; background: rgba(0,0,0,0.25); border-right: 1px solid var(--border); min-width: 44px; text-align: right; font-size: 11px; line-height: 1.85; color: var(--text-dim); overflow-y: hidden; user-select: none; flex-shrink: 0; }
+        .editor-gutter { padding: 1.25rem 10px 1.25rem 0; background: rgba(0,0,0,0.3); border-right: 1px solid var(--border); min-width: 44px; text-align: right; font-size: 11px; line-height: 1.85; color: var(--text-dim); overflow-y: hidden; user-select: none; flex-shrink: 0; }
         #mainEditor { flex: 1; background: transparent; color: var(--neon); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.85; padding: 1.25rem 1.5rem; outline: none; resize: none; border: none; tab-size: 2; overflow-y: auto; caret-color: var(--neon); }
-        #mainEditor::placeholder { color: rgba(57,255,20,0.15); }
-        .btn-run { background: var(--neon); color: #000; border: none; cursor: pointer; font-family: inherit; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 14px; display: flex; align-items: center; gap: 5px; transition: filter 0.2s; }
-        .btn-run:hover { filter: brightness(1.2); }
+        #mainEditor::placeholder { color: rgba(57,255,20,0.12); }
+        .btn-run { background: var(--neon); color: #000; border: none; cursor: pointer; font-family: inherit; font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.12em; padding: 5px 14px; display: flex; align-items: center; gap: 5px; transition: filter 0.2s, box-shadow 0.2s; }
+        .btn-run:hover { filter: brightness(1.2); box-shadow: 0 0 20px rgba(57,255,20,0.5); }
         .btn-run svg { width: 10px; height: 10px; stroke: currentColor; }
 
         /* TERMINAL */
-        .ide-terminal { border-top: 1px solid var(--border); background: var(--panel); display: flex; flex-direction: column; overflow: hidden; height: 200px; }
+        .ide-terminal { border-top: 1px solid var(--border); background: rgba(6,7,10,0.85); backdrop-filter: blur(10px); display: flex; flex-direction: column; overflow: hidden; height: 200px; }
         .terminal-tabbar { display: flex; align-items: center; border-bottom: 1px solid var(--border); flex-shrink: 0; }
         .terminal-tab { padding: 7px 14px; font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; transition: all 0.15s; }
         .terminal-tab.active { color: var(--neon); border-bottom-color: var(--neon); }
@@ -218,46 +342,42 @@
         .terminal-action { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px 6px; font-size: 10px; transition: color 0.15s; font-family: inherit; }
         .terminal-action:hover { color: var(--neon); }
         #terminal { flex: 1; padding: 10px 14px; font-size: 11px; line-height: 1.7; overflow-y: auto; color: rgba(255,255,255,0.55); font-family: 'JetBrains Mono', monospace; }
-        .t-line { display: flex; gap: 10px; margin-bottom: 1px; word-break: break-all; }
-        .t-prompt { color: var(--neon); flex-shrink: 0; }
-        .t-out { color: rgba(255,255,255,0.7); }
-        .t-err { color: #f87171; }
-        .t-success { color: var(--neon); }
-        .t-warn { color: #facc15; }
-        .t-input-prompt { color: #7dcfff; }
+        .t-line { display: flex; gap: 10px; margin-bottom: 1px; word-break: break-all; animation: termLine 0.2s ease; }
+        @keyframes termLine { from{opacity:0;transform:translateX(-4px)} to{opacity:1;transform:translateX(0)} }
+        .t-prompt{color:var(--neon);flex-shrink:0}.t-out{color:rgba(255,255,255,0.7)}.t-err{color:#f87171}.t-success{color:var(--neon)}.t-warn{color:#facc15}.t-input-prompt{color:#7dcfff}
 
-        /* INPUT MODAL (for get/getIn) */
-        .input-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 600; display: flex; align-items: center; justify-content: center; }
-        .input-modal { background: var(--panel); border: 1px solid var(--border-bright); padding: 2rem; min-width: 340px; position: relative; }
-        .input-modal::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
-        .input-modal-label { font-size: 9px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
-        .input-modal-question { font-size: 14px; color: #fff; font-weight: 700; margin-bottom: 1.25rem; line-height: 1.5; }
-        .input-modal-input { width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 13px; padding: 10px 14px; outline: none; margin-bottom: 1rem; }
-        .input-modal-input:focus { border-color: var(--neon); }
-        .input-modal-actions { display: flex; gap: 8px; }
-        .input-modal-ok { flex: 1; }
-
-        /* NEW FILE MODAL / GENERAL DIALOGS */
-        .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 500; display: flex; align-items: center; justify-content: center; }
-        .modal { background: var(--panel); border: 1px solid var(--border); padding: 2rem; min-width: 320px; position: relative; }
-        .modal::before { content: ''; position: absolute; top: -1px; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, var(--neon), transparent); }
-        .modal-title { font-size: 9px; font-weight: 700; letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem; }
-        .modal-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 13px; padding: 10px 14px; outline: none; margin-bottom: 1rem; }
-        .modal-input:focus { border-color: var(--neon); }
-        .modal-actions { display: flex; gap: 8px; }
-        .modal-cancel { background: none; border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); padding: 11px 20px; font-family: inherit; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; }
-        .modal-cancel:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+        /* MODALS */
+        .input-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 600; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); }
+        .input-modal { background: var(--glass); border: 1px solid var(--border-bright); backdrop-filter: blur(24px); padding: 2rem; min-width: 340px; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.8), 0 0 60px rgba(57,255,20,0.08); animation: modalIn 0.35s cubic-bezier(0.22,1,0.36,1); }
+        @keyframes modalIn { from{opacity:0;transform:scale(0.92) translateY(16px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        .input-modal::before { content:''; position:absolute; top:-1px; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--neon),transparent); }
+        .input-modal-label { font-size:9px; font-weight:700; letter-spacing:0.25em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px; }
+        .input-modal-question { font-size:14px; color:#fff; font-weight:700; margin-bottom:1.25rem; line-height:1.5; }
+        .input-modal-input { width:100%; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--neon); font-family:inherit; font-size:13px; padding:10px 14px; outline:none; margin-bottom:1rem; transition:border-color 0.2s; }
+        .input-modal-input:focus { border-color:var(--neon); box-shadow:0 0 0 1px rgba(57,255,20,0.2); }
+        .input-modal-actions { display:flex; gap:8px; }
+        .input-modal-ok { flex:1; }
+        .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:500; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); }
+        .modal { background:var(--glass); border:1px solid var(--border); backdrop-filter:blur(24px); padding:2rem; min-width:320px; position:relative; animation:modalIn 0.35s cubic-bezier(0.22,1,0.36,1); box-shadow:0 24px 80px rgba(0,0,0,0.8); }
+        .modal::before { content:''; position:absolute; top:-1px; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--neon),transparent); }
+        .modal-title { font-size:9px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:var(--text-muted); margin-bottom:1rem; }
+        .modal-input { width:100%; background:rgba(255,255,255,0.04); border:1px solid var(--border); color:var(--neon); font-family:inherit; font-size:13px; padding:10px 14px; outline:none; margin-bottom:1rem; transition:border-color 0.2s; }
+        .modal-input:focus { border-color:var(--neon); }
+        .modal-actions { display:flex; gap:8px; }
+        .modal-cancel { background:none; border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.5); padding:11px 20px; font-family:inherit; font-size:10px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:border-color 0.2s, color 0.2s; }
+        .modal-cancel:hover { border-color:rgba(255,255,255,0.3); color:#fff; }
 
         /* TOAST */
-        .toast { position: fixed; bottom: 2rem; right: 2rem; z-index: 999; background: var(--panel); border: 1px solid var(--border-bright); padding: 11px 18px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--neon); transform: translateY(70px); opacity: 0; transition: all 0.3s; pointer-events: none; max-width: 300px; }
-        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast { position:fixed; bottom:2rem; right:2rem; z-index:999; background:var(--glass); border:1px solid var(--border-bright); backdrop-filter:blur(20px); padding:11px 18px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--neon); transform:translateY(70px) scale(0.95); opacity:0; transition:all 0.35s cubic-bezier(0.22,1,0.36,1); pointer-events:none; max-width:300px; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
+        .toast.show { transform:translateY(0) scale(1); opacity:1; }
 
-        @keyframes pulse-anim { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        /* AI Settings */
+        select { -webkit-appearance: none; }
     </style>
 </head>
 <body>
 
-<canvas id="canvas-bg"></canvas>
+<canvas id="canvas-3d"></canvas>
 
 <!-- NAV -->
 <nav id="main-nav">
@@ -267,16 +387,13 @@
     </div>
     <div id="nav-links" class="nav-links" style="display:none">
         <button class="nav-link" onclick="showView('dashboard')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            Dashboard
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
         </button>
         <button class="nav-link" onclick="showView('workspace')">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-            Editor
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Editor
         </button>
         <button class="nav-link" onclick="toggleSyntaxPanel()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Syntax
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Syntax
         </button>
     </div>
     <div class="nav-right">
@@ -290,18 +407,19 @@
     </div>
 </nav>
 
-<!-- ══════ HERO ══════ -->
+<!-- HERO -->
 <section id="hero-view" class="view active">
     <div class="hero-above-fold">
-        <p class="hero-eyebrow">Version 4.0.2 — Vik Script Powered</p>
-        <h1 class="hero-headline">VIK_PRO.<br/><span class="accent">ENGINE.</span></h1>
-        <p class="hero-sub">The cloud IDE built for Vik Script — a friendly language with plain English commands. Write, run, and ship from anywhere.</p>
-        <div id="auth-loading" style="font-size:9px; letter-spacing:0.3em; text-transform:uppercase; color:var(--neon); animation:pulse-anim 1.5s infinite;">BOOTING_CORE_SYSTEMS…</div>
-        <div id="auth-controls" style="display:none; width:100%">
-            <div class="auth-card">
+        <p class="hero-eyebrow reveal">Version 4.0.2 — Vik Script Powered</p>
+        <h1 class="hero-headline reveal reveal-delay-1">VIK_PRO.<br/><span class="accent">ENGINE.</span></h1>
+        <p class="hero-sub reveal reveal-delay-2">The cloud IDE built for Vik Script — a friendly language with plain English commands. Write, run, and ship from anywhere.</p>
+
+        <div id="auth-loading" style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--neon);animation:pulse 1.5s infinite">BOOTING_CORE_SYSTEMS…</div>
+        <div id="auth-controls" style="display:none;width:100%" class="reveal reveal-delay-3">
+            <div class="tilt-card" id="auth-card">
                 <p class="auth-title">Sign in to your workspace</p>
                 <button class="auth-btn auth-btn-google" onclick="loginGoogle()">
-                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92(3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
                     Continue with Google
                 </button>
                 <button class="auth-btn auth-btn-github" onclick="loginGithub()">
@@ -315,44 +433,44 @@
     </div>
 
     <div class="stats-bar">
-        <div class="stat-item"><div class="stat-num">4.2ms</div><div class="stat-label">Avg. Sync Latency</div></div>
-        <div class="stat-item"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
-        <div class="stat-item"><div class="stat-num">12+</div><div class="stat-label">Language Commands</div></div>
-        <div class="stat-item"><div class="stat-num">∞</div><div class="stat-label">File Storage</div></div>
-        <div class="stat-item"><div class="stat-num">US‑E2</div><div class="stat-label">Active Region</div></div>
+        <div class="stat-item reveal"><div class="stat-num">4.2ms</div><div class="stat-label">Avg. Sync Latency</div></div>
+        <div class="stat-item reveal reveal-delay-1"><div class="stat-num">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+        <div class="stat-item reveal reveal-delay-2"><div class="stat-num">12+</div><div class="stat-label">Language Commands</div></div>
+        <div class="stat-item reveal reveal-delay-3"><div class="stat-num">∞</div><div class="stat-label">File Storage</div></div>
+        <div class="stat-item reveal reveal-delay-4"><div class="stat-num">US‑E2</div><div class="stat-label">Active Region</div></div>
     </div>
 
     <div class="features-section">
-        <div style="max-width:1100px; margin:0 auto">
-            <p class="section-label">Why Vik Pro</p>
-            <h2 class="section-title">Built for everyone.<br/>Ships fast.</h2>
+        <div style="max-width:1100px;margin:0 auto">
+            <p class="section-label reveal">Why Vik Pro</p>
+            <h2 class="section-title reveal reveal-delay-1">Built for everyone.<br/>Ships fast.</h2>
             <div class="features-grid">
-                <div class="feature-card">
+                <div class="feature-card reveal">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
                     <div class="feature-name">Vik Script Language</div>
                     <div class="feature-desc">A plain-English scripting language made for beginners. Use <code style="color:var(--neon)">say</code>, <code style="color:var(--neon)">get</code>, <code style="color:var(--neon)">calc</code> and more — no semicolons, no confusion.</div>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal reveal-delay-1">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
                     <div class="feature-name">Real Interpreter</div>
                     <div class="feature-desc">Hit Run and watch your Vik Script execute live — variables, conditions, loops, functions, arrays, and user input all work.</div>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal reveal-delay-2">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
                     <div class="feature-name">Cloud Sync</div>
                     <div class="feature-desc">Every file auto-saves locally instantly. Multi-file storage is always persistent and safe.</div>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal reveal-delay-3">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
                     <div class="feature-name">Syntax Reference</div>
                     <div class="feature-desc">The built-in syntax panel shows every command with examples. Click any snippet to insert it straight into your editor.</div>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal reveal-delay-4">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
                     <div class="feature-name">Multi-File Projects</div>
                     <div class="feature-desc">Tab-based file management, a full sidebar tree, and per-file autosave. Organize your Vik Script projects like a pro.</div>
                 </div>
-                <div class="feature-card">
+                <div class="feature-card reveal reveal-delay-4">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg></div>
                     <div class="feature-name">AI Co-Pilot</div>
                     <div class="feature-desc">Stuck? Ask Vik AI to help you fix bugs, explain code, or write new Vik Script — right inside the editor panel powered by Gemini.</div>
@@ -362,17 +480,17 @@
     </div>
 
     <div class="code-preview-section">
-        <div style="max-width:1100px; margin:0 auto; text-align:center">
-            <p class="section-label">Vik Script in action</p>
-            <h2 class="section-title">Plain English.<br/>Real results.</h2>
-            <div class="code-window">
+        <div style="max-width:1100px;margin:0 auto;text-align:center">
+            <p class="section-label reveal">Vik Script in action</p>
+            <h2 class="section-title reveal reveal-delay-1">Plain English.<br/>Real results.</h2>
+            <div class="code-window reveal reveal-delay-2">
                 <div class="code-window-bar">
                     <div class="dot" style="background:#ff5f57"></div>
                     <div class="dot" style="background:#febc2e"></div>
                     <div class="dot" style="background:#28c840"></div>
                     <span class="code-window-title">hello_world.vik — VIK_PRO_ENGINE</span>
                 </div>
-                <div class="code-window-body" style="text-align: left;"><pre><span class="cmt">// Ask the user for their name and age</span>
+                <div class="code-window-body" style="text-align:left"><pre><span class="cmt">// Ask the user for their name and age</span>
 <span class="kw">get</span> name <span class="str">What is your name?</span>
 <span class="kw">getIn</span> age <span class="str">How old are you?</span>
 
@@ -398,9 +516,9 @@
     </div>
 
     <div class="cta-section">
-        <p class="section-label">Ready to code?</p>
-        <h2 class="section-title" style="margin-bottom:2.5rem">Start writing Vik Script<br/><span style="color:var(--neon)">in 10 seconds.</span></h2>
-        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap">
+        <p class="section-label reveal">Ready to code?</p>
+        <h2 class="section-title reveal reveal-delay-1" style="margin-bottom:2.5rem">Start writing Vik Script<br/><span style="color:var(--neon)">in 10 seconds.</span></h2>
+        <div class="reveal reveal-delay-2" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
             <button class="btn-primary" onclick="document.querySelector('.hero-above-fold').scrollIntoView({behavior:'smooth'})">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 Get Started Free
@@ -410,17 +528,16 @@
     </div>
 </section>
 
-<!-- ══════ DASHBOARD ══════ -->
+<!-- DASHBOARD -->
 <section id="dashboard-view" class="view">
     <div class="dashboard-content">
         <div class="dashboard-header">
             <div>
-                <div style="font-size:clamp(1.8rem,4vw,3rem); font-weight:900; font-style:italic; text-transform:uppercase; color:#fff; line-height:0.9; letter-spacing:-0.03em;" id="greeting-text">Command_Center</div>
-                <span style="font-size:9px; font-weight:700; letter-spacing:0.2em; color:var(--text-muted); text-transform:uppercase; display:block; margin-top:0.75rem">System operational — V4.0.2</span>
+                <div style="font-size:clamp(1.8rem,4vw,3rem);font-weight:900;font-style:italic;text-transform:uppercase;color:#fff;line-height:0.9;letter-spacing:-0.03em" id="greeting-text">Command_Center</div>
+                <span style="font-size:9px;font-weight:700;letter-spacing:0.2em;color:var(--text-muted);text-transform:uppercase;display:block;margin-top:0.75rem">System operational — V4.0.2</span>
             </div>
             <button class="btn-primary" onclick="showView('workspace')">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                Open IDE
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>Open IDE
             </button>
         </div>
         <div class="stats-row">
@@ -429,7 +546,7 @@
             <div class="stat-card"><div class="stat-card-num" id="stat-fns">0</div><div class="stat-card-label">Functions Defined</div></div>
             <div class="stat-card"><div class="stat-card-num" style="color:var(--neon)">● ACTIVE</div><div class="stat-card-label">Engine Status</div></div>
         </div>
-        <p style="font-size:9px; font-weight:700; letter-spacing:0.3em; text-transform:uppercase; color:var(--text-muted); margin-bottom:1rem">Quick Actions</p>
+        <p style="font-size:9px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:var(--text-muted);margin-bottom:1rem">Quick Actions</p>
         <div class="quick-grid" style="margin-bottom:3rem">
             <div class="quick-action" onclick="openNewFile()">
                 <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></div>
@@ -441,7 +558,7 @@
                 <div class="quick-action-label">Open Editor</div>
                 <div class="quick-action-desc">Jump into the full IDE</div>
             </div>
-            <div class="quick-action" onclick="toggleSyntaxPanel(); showView('workspace');">
+            <div class="quick-action" onclick="toggleSyntaxPanel();showView('workspace')">
                 <div class="quick-action-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
                 <div class="quick-action-label">Syntax Guide</div>
                 <div class="quick-action-desc">All Vik Script commands</div>
@@ -454,7 +571,7 @@
         </div>
         <div class="section-head">
             <p class="section-head-title">Your Files</p>
-            <button class="btn-outline" onclick="openNewFile()" style="font-size:8px; padding:7px 14px">+ New File</button>
+            <button class="btn-outline" onclick="openNewFile()" style="font-size:8px;padding:7px 14px">+ New File</button>
         </div>
         <div class="files-grid" id="dashboard-files" style="margin-bottom:3rem"></div>
         <div class="section-head" style="margin-bottom:1rem">
@@ -467,9 +584,8 @@
     </div>
 </section>
 
-<!-- ══════ WORKSPACE ══════ -->
-<section id="workspace-view" class="view" style="display:none;">
-    <!-- Tab bar + toolbar -->
+<!-- WORKSPACE -->
+<section id="workspace-view" class="view" style="display:none">
     <div class="ide-tabbar">
         <div class="ide-tabs" id="ide-tabs">
             <button class="tab-new-btn" onclick="openNewFile()" title="New file">＋</button>
@@ -493,20 +609,13 @@
             <span class="save-status-badge" id="save-status">Synced</span>
         </div>
     </div>
-
-    <!-- IDE body -->
     <div class="ide-body">
-        <!-- Sidebar -->
         <div class="ide-sidebar">
             <div class="sidebar-head">
                 Filesystem
                 <div style="display:flex;gap:4px">
-                    <button class="sidebar-action" onclick="openNewFile()" title="New file">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                    </button>
-                    <button class="sidebar-action" onclick="deleteActiveFile()" title="Delete">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                    </button>
+                    <button class="sidebar-action" onclick="openNewFile()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg></button>
+                    <button class="sidebar-action" onclick="deleteActiveFile()"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
                 </div>
             </div>
             <div class="file-tree" id="file-list"></div>
@@ -515,8 +624,6 @@
                 <span class="sidebar-conn-text" id="conn-text">Active Client</span>
             </div>
         </div>
-
-        <!-- Editor + side panels -->
         <div class="ide-editor-wrap">
             <div class="ide-editor-area">
                 <div class="editor-statusbar">
@@ -529,47 +636,34 @@
                         <span class="status-item">VIK_SCRIPT</span>
                     </div>
                     <button class="btn-run" onclick="runCode()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        RUN
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>RUN
                     </button>
                 </div>
                 <div class="editor-main">
                     <div class="editor-gutter" id="gutter">1</div>
-                    <textarea id="mainEditor"
-                        spellcheck="false"
-                        placeholder="// Start writing Vik Script here…"
-                        oninput="handleEditorInput(this)"
-                        onkeydown="handleEditorKeydown(event)"
-                        onkeyup="updateCursorPos(this)"
-                        onclick="updateCursorPos(this)"
-                        onscroll="syncGutterScroll(this)"
-                    ></textarea>
+                    <textarea id="mainEditor" spellcheck="false" placeholder="// Start writing Vik Script here…"
+                        oninput="handleEditorInput(this)" onkeydown="handleEditorKeydown(event)"
+                        onkeyup="updateCursorPos(this)" onclick="updateCursorPos(this)"
+                        onscroll="syncGutterScroll(this)"></textarea>
                 </div>
             </div>
-
             <!-- Syntax panel -->
             <div class="ide-syntax-panel" id="syntax-panel">
-                <div class="panel-head">
-                    Vik Script Syntax
-                    <button class="panel-close" onclick="toggleSyntaxPanel()">×</button>
-                </div>
+                <div class="panel-head">Vik Script Syntax<button class="panel-close" onclick="toggleSyntaxPanel()">×</button></div>
                 <div class="syntax-body" id="syntax-body"></div>
             </div>
-
             <!-- AI panel -->
             <div class="ide-ai-panel" id="ai-panel">
                 <div class="panel-head">
                     <span>Vik AI Assistant</span>
-                    <div style="display:flex; align-items:center; gap:8px">
-                        <button class="sidebar-action" onclick="toggleAISettings()" title="AI Settings">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <button class="sidebar-action" onclick="toggleAISettings()">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9z"/></svg>
                         </button>
                         <button class="panel-close" onclick="toggleAIPanel()">×</button>
                     </div>
                 </div>
-
-                <!-- Chat View -->
-                <div id="ai-chat-view" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                <div id="ai-chat-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
                     <div class="ai-panel-body" id="ai-messages">
                         <div class="ai-msg system">👾 <strong>Vik AI</strong> — Ask me to explain, write, or fix your Vik Script code. Powered by Gemini.</div>
                     </div>
@@ -580,55 +674,44 @@
                         </button>
                     </div>
                 </div>
-
-                <!-- Settings View -->
-                <div id="ai-settings-view" style="display: none; flex-direction: column; flex: 1; padding: 12px; overflow-y: auto;">
-                    <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--neon); margin-bottom: 12px;">AI Config & Model</div>
-                    
-                    <div style="margin-bottom: 14px;">
-                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Provider Key Strategy</label>
-                        <select id="ai-key-strategy" onchange="handleKeyStrategyChange(this.value)" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 6px; outline: none;">
+                <div id="ai-settings-view" style="display:none;flex-direction:column;flex:1;padding:12px;overflow-y:auto">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--neon);margin-bottom:12px">AI Config & Model</div>
+                    <div style="margin-bottom:14px">
+                        <label style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px">Provider Key Strategy</label>
+                        <select id="ai-key-strategy" onchange="handleKeyStrategyChange(this.value)" style="width:100%;background:rgba(0,0,0,0.5);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:10px;padding:6px;outline:none">
                             <option value="env">Default Sandbox Key</option>
                             <option value="custom">Custom Gemini API Key</option>
                         </select>
                     </div>
-
-                    <div id="custom-key-container" style="display: none; margin-bottom: 14px;">
-                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Custom Gemini API Key</label>
-                        <div style="position: relative;">
-                            <input type="password" id="custom-gemini-key" placeholder="AIzaSy..." style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: var(--neon); font-family: inherit; font-size: 10px; padding: 6px 30px 6px 6px; outline: none;">
-                            <button onclick="toggleKeyVisibility()" style="position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 9px;">👁️</button>
+                    <div id="custom-key-container" style="display:none;margin-bottom:14px">
+                        <label style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px">Custom Gemini API Key</label>
+                        <div style="position:relative">
+                            <input type="password" id="custom-gemini-key" placeholder="AIzaSy..." style="width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:var(--neon);font-family:inherit;font-size:10px;padding:6px 30px 6px 6px;outline:none">
+                            <button onclick="toggleKeyVisibility()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:9px">👁️</button>
                         </div>
                     </div>
-
-                    <div style="margin-bottom: 14px;">
-                        <label style="font-size: 8px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 4px;">Model Selection</label>
-                        <select id="ai-model-select" style="width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); color: #fff; font-family: inherit; font-size: 10px; padding: 6px; outline: none;">
+                    <div style="margin-bottom:14px">
+                        <label style="font-size:8px;font-weight:700;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px">Model Selection</label>
+                        <select id="ai-model-select" style="width:100%;background:rgba(0,0,0,0.4);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:10px;padding:6px;outline:none">
                             <option value="gemini-2.5-flash-preview-09-2025">Gemini 2.5 Flash (Default)</option>
                             <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                         </select>
                     </div>
-
-                    <button class="btn-primary w-full justify-center" style="margin-top: 10px; clip-path: none; padding: 10px; border-radius: 2px;" onclick="saveAISettings()">Save Configuration</button>
-                    
-                    <div style="margin-top: 20px; font-size: 9px; line-height: 1.6; color: var(--text-muted); background: rgba(255,255,255,0.02); padding: 8px; border: 1px solid rgba(255,255,255,0.04);">
+                    <button class="btn-primary" style="margin-top:10px;clip-path:none;padding:10px;border-radius:2px;justify-content:center" onclick="saveAISettings()">Save Configuration</button>
+                    <div style="margin-top:20px;font-size:9px;line-height:1.6;color:var(--text-muted);background:rgba(255,255,255,0.02);padding:8px;border:1px solid rgba(255,255,255,0.04)">
                         <strong>💡 How to get a key:</strong><br/>
-                        Go to <a href="https://aistudio.google.com/" target="_blank" class="text-neon underline">Google AI Studio</a>, create a free Gemini API Key, and paste it here to run custom prompt architectures from any host!
+                        Go to <a href="https://aistudio.google.com/" target="_blank" style="color:var(--neon)">Google AI Studio</a>, create a free Gemini API Key, and paste it here.
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Terminal -->
     <div class="ide-terminal">
         <div class="terminal-tabbar">
             <button class="terminal-tab active" id="tab-output" onclick="switchTermTab('output')">Output</button>
             <button class="terminal-tab" id="tab-problems" onclick="switchTermTab('problems')">Problems</button>
             <button class="terminal-tab" id="tab-log" onclick="switchTermTab('log')">Log</button>
-            <div class="terminal-actions">
-                <button class="terminal-action" onclick="clearTerminal()" title="Clear">✕ Clear</button>
-            </div>
+            <div class="terminal-actions"><button class="terminal-action" onclick="clearTerminal()">✕ Clear</button></div>
         </div>
         <div id="terminal">
             <div class="t-line"><span class="t-prompt">▶</span><span class="t-out">VIK_PRO Engine v4.0.2 — Vik Script interpreter ready.</span></div>
@@ -643,24 +726,24 @@
         <div class="modal-title">Create New File</div>
         <input type="text" class="modal-input" id="new-file-name" placeholder="filename.vik" onkeydown="if(event.key==='Enter')confirmNewFile()">
         <div class="modal-actions">
-            <button class="btn-primary" style="flex:1; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="confirmNewFile()">Create</button>
+            <button class="btn-primary" style="flex:1;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="confirmNewFile()">Create</button>
             <button class="modal-cancel" onclick="closeNewFileModal()">Cancel</button>
         </div>
     </div>
 </div>
 
-<!-- INFO / ERROR CONSOLE MODAL -->
+<!-- INFO MODAL -->
 <div id="info-modal" class="modal-backdrop" style="display:none" onclick="if(event.target===this)closeInfoModal()">
-    <div class="modal" style="max-width: 480px;">
-        <div class="modal-title" id="info-modal-title" style="color: #ff5f57;">Domain Authorization Required</div>
-        <div id="info-modal-text" style="font-size: 11px; line-height: 1.8; color: rgba(255,255,255,0.8); margin-bottom: 1.5rem; word-break: break-word;"></div>
+    <div class="modal" style="max-width:480px">
+        <div class="modal-title" id="info-modal-title" style="color:#ff5f57">Domain Authorization Required</div>
+        <div id="info-modal-text" style="font-size:11px;line-height:1.8;color:rgba(255,255,255,0.8);margin-bottom:1.5rem;word-break:break-word"></div>
         <div class="modal-actions">
-            <button class="btn-primary" style="flex:1; clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="closeInfoModal()">Acknowledge</button>
+            <button class="btn-primary" style="flex:1;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)" onclick="closeInfoModal()">Acknowledge</button>
         </div>
     </div>
 </div>
 
-<!-- USER INPUT MODAL (for get / getIn) -->
+<!-- USER INPUT MODAL -->
 <div id="input-modal" class="input-modal-backdrop" style="display:none">
     <div class="input-modal">
         <div class="input-modal-label">Vik Script — User Input Required</div>
@@ -672,8 +755,178 @@
     </div>
 </div>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
+
+<script>
+// ══════════ 3D PARTICLE FLOW BACKGROUND ══════════
+(function() {
+    const canvas = document.getElementById('canvas-3d');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) {
+        // Fallback: classic matrix canvas
+        canvas.remove();
+        const c2 = document.createElement('canvas');
+        c2.id = 'canvas-bg';
+        c2.style.cssText = 'position:fixed;inset:0;z-index:0;opacity:0.10;pointer-events:none';
+        document.body.prepend(c2);
+        const ctx = c2.getContext('2d');
+        function resize() { c2.width = innerWidth; c2.height = innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        const chars = '01ABVIK_PRO_';
+        const fs = 11; let drops = [];
+        function initDrops() { drops = Array(Math.floor(c2.width/fs)).fill(1); }
+        initDrops();
+        window.addEventListener('resize', initDrops);
+        setInterval(() => {
+            ctx.fillStyle = 'rgba(5,5,8,0.08)';
+            ctx.fillRect(0,0,c2.width,c2.height);
+            ctx.fillStyle = '#39ff14'; ctx.font = `${fs}px monospace`;
+            drops.forEach((y,i) => {
+                ctx.fillText(chars[Math.floor(Math.random()*chars.length)], i*fs, y*fs);
+                if (y*fs > c2.height && Math.random() > 0.98) drops[i] = 0;
+                drops[i]++;
+            });
+        }, 40);
+        return;
+    }
+
+    // WebGL 3D particle system
+    function resize() {
+        canvas.width = innerWidth * devicePixelRatio;
+        canvas.height = innerHeight * devicePixelRatio;
+        canvas.style.width = innerWidth + 'px';
+        canvas.style.height = innerHeight + 'px';
+        gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize); resize();
+
+    const PARTICLE_COUNT = 3000;
+
+    const vsSource = `
+        attribute vec3 aPos;
+        attribute float aSpeed;
+        attribute float aBrightness;
+        uniform float uTime;
+        uniform float uAspect;
+        uniform vec2 uMouse;
+        varying float vBright;
+        varying float vDepth;
+        void main() {
+            float t = mod(uTime * aSpeed * 0.0003, 1.0);
+            float x = aPos.x + sin(uTime * 0.0005 + aPos.z * 3.14) * 0.05;
+            float y = aPos.y - t * 2.0 + 1.0;
+            float z = aPos.z;
+            y = mod(y + 1.0, 2.0) - 1.0;
+            vec2 mouse = uMouse * 0.08;
+            x += mouse.x * (1.0 - z);
+            y += mouse.y * (1.0 - z);
+            float persp = 1.0 / (1.0 + z * 0.5);
+            gl_Position = vec4(x * persp / uAspect, y * persp, z, 1.0);
+            gl_PointSize = (2.5 - z * 1.5) * persp * aBrightness;
+            vBright = aBrightness;
+            vDepth = z;
+        }
+    `;
+    const fsSource = `
+        precision mediump float;
+        varying float vBright;
+        varying float vDepth;
+        void main() {
+            float d = length(gl_PointCoord - 0.5);
+            if (d > 0.5) discard;
+            float alpha = (1.0 - d * 2.0) * vBright * (1.0 - vDepth * 0.6) * 0.6;
+            gl_FragColor = vec4(0.22, 1.0, 0.08, alpha);
+        }
+    `;
+
+    function compileShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        return s;
+    }
+    const prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(prog, compileShader(gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(prog);
+    gl.useProgram(prog);
+
+    const pos = new Float32Array(PARTICLE_COUNT * 3);
+    const speeds = new Float32Array(PARTICLE_COUNT);
+    const brights = new Float32Array(PARTICLE_COUNT);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+        pos[i*3]   = (Math.random() - 0.5) * 4;
+        pos[i*3+1] = (Math.random() - 0.5) * 2;
+        pos[i*3+2] = Math.random();
+        speeds[i]  = 0.5 + Math.random() * 2;
+        brights[i] = 0.3 + Math.random() * 0.7;
+    }
+
+    function makeBuffer(data, loc, size) {
+        const buf = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+        gl.enableVertexAttribArray(loc);
+        gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
+    }
+    makeBuffer(pos,    gl.getAttribLocation(prog, 'aPos'),        3);
+    makeBuffer(speeds, gl.getAttribLocation(prog, 'aSpeed'),      1);
+    makeBuffer(brights,gl.getAttribLocation(prog, 'aBrightness'), 1);
+
+    const uTime   = gl.getUniformLocation(prog, 'uTime');
+    const uAspect = gl.getUniformLocation(prog, 'uAspect');
+    const uMouse  = gl.getUniformLocation(prog, 'uMouse');
+
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE);
+    gl.clearColor(0, 0, 0, 0);
+
+    let mx = 0, my = 0;
+    window.addEventListener('mousemove', e => {
+        mx = (e.clientX / innerWidth  - 0.5) * 2;
+        my = (e.clientY / innerHeight - 0.5) * -2;
+    });
+
+    function draw(ts) {
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.uniform1f(uTime, ts);
+        gl.uniform1f(uAspect, canvas.width / canvas.height);
+        gl.uniform2f(uMouse, mx, my);
+        gl.drawArrays(gl.POINTS, 0, PARTICLE_COUNT);
+        requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+})();
+</script>
+
+<script>
+// ══════════ 3D TILT ON AUTH CARD ══════════
+document.addEventListener('mousemove', e => {
+    const card = document.getElementById('auth-card');
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const dx = (e.clientX - cx) / (rect.width / 2);
+    const dy = (e.clientY - cy) / (rect.height / 2);
+    const inCard = Math.abs(dx) < 1.5 && Math.abs(dy) < 1.5;
+    card.style.transform = inCard
+        ? `perspective(600px) rotateY(${dx * 8}deg) rotateX(${-dy * 8}deg) translateZ(10px)`
+        : 'perspective(600px) rotateY(0deg) rotateX(0deg) translateZ(0px)';
+    card.style.setProperty('--mx', ((dx + 1) * 50) + '%');
+    card.style.setProperty('--my', ((dy + 1) * 50) + '%');
+});
+
+// ══════════ SCROLL REVEAL ══════════
+function initReveal() {
+    const els = document.querySelectorAll('.reveal');
+    const obs = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    }, { threshold: 0.1 });
+    els.forEach(el => obs.observe(el));
+}
+initReveal();
+</script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -688,191 +941,109 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// ══════════════════════ STATE ══════════════════════
-const EXAMPLE_CODE = `// Vik Script — Example Program
-// This is a full demo of what Vik Script can do!
+const EXAMPLE_CODE = `// Vik Script — Example Program\nget name What is your name?\ngetIn age How old are you?\nsay Hello vari,name! Welcome to Vik Script!\ni age >= 18\n  say You are an adult.\nenif\ni age >= 13\n  say Hey there, teenager!\nenif\nar colors = red,green,blue\nsay Your color list: vari,colors\ncalc double_age = age a age\nsay Your age doubled is: vari,double_age\nfun greet\n  say Welcome vari,name to Vik Script!\nendf\ncall greet\n`;
 
-// ── Input ──
-get name What is your name?
-getIn age How old are you?
-
-// ── Output with variable ──
-say Hello vari,name! Welcome to Vik Script!
-
-// ── Conditions ──
-set condition_met = false
-
-i age >= 18
-  say You are an adult.
-  set condition_met = true
-enif
-
-i condition_met == false
-  i age >= 13
-    say You are a teenager!
-    set condition_met = true
-  enif
-enif
-
-i condition_met == false
-  say You must be a child. That is awesome!
-enif
-
-// ── Arrays ──
-ar colors = red,green,blue
-say Your color list: vari,colors
-
-// ── Math ──
-calc double_age = age a age
-say Your age doubled is: vari,double_age
-
-// ── Join variables ──
-joi,name double_age
-say Name and doubled age joined: vari,name double_age
-
-// ── Functions ──
-fun greet
-  say Welcome vari,name to Vik Script!
-endf
-
-call greet
-`;
-
-let files = {
-    'main.vik': EXAMPLE_CODE,
-    'config.vik': `// Project config
-set project_name = MyProject
-set version = 1
-say Project vari,project_name is running!
-`,
-};
+let files = { 'main.vik': EXAMPLE_CODE, 'config.vik': `// Project config\\nset project_name = MyProject\\nset version = 1\\nsay Project vari,project_name is running!\\n` };
 let activeFile = 'main.vik';
 let aiPanelOpen = false;
 let syntaxPanelOpen = false;
-let aiConversation = [];
 let activityLog = [];
 let activeTerminalTab = 'output';
+let outputBuffer = [], problemsBuffer = [], logBuffer = [];
+let variables = {}, functions = {};
+let inputPromiseResolver = null;
 
-// Gemini API setup
-const apiKey = ""; // Runtime-provided Gemini key
-
-// AI Configuration Preferences
+const apiKey = "";
 let aiKeyStrategy = localStorage.getItem('ai_key_strategy') || 'env';
 let customGeminiKey = localStorage.getItem('custom_gemini_key') || '';
 let selectedAIModel = localStorage.getItem('selected_ai_model') || 'gemini-2.5-flash-preview-09-2025';
 
-// ══════════════════════ SYNTAX REFERENCE DATA ══════════════════════
+if (localStorage.getItem('vik_pro_files')) {
+    try { files = JSON.parse(localStorage.getItem('vik_pro_files')); activeFile = Object.keys(files)[0] || 'main.vik'; } catch(e) {}
+}
+
 const SYNTAX_REF = [
     { group: 'Input', items: [
-        { cmd: 'get varName Question text?', desc: 'Ask the user for text. Stores answer in varName.', insert: 'get name What is your name?' },
-        { cmd: 'getIn varName Question text?', desc: 'Ask the user for a number. Stores answer in varName.', insert: 'getIn age How old are you?' },
+        { cmd: 'get varName Question text?', desc: 'Ask user for text.', insert: 'get name What is your name?' },
+        { cmd: 'getIn varName Question text?', desc: 'Ask user for a number.', insert: 'getIn age How old are you?' },
     ]},
     { group: 'Output', items: [
-        { cmd: 'say message text', desc: 'Print a line of text. Use vari,varName to show a variable.', insert: 'say Hello vari,name!' },
+        { cmd: 'say message text', desc: 'Print a line. Use vari,varName to show a variable.', insert: 'say Hello vari,name!' },
     ]},
     { group: 'Variables', items: [
         { cmd: 'set varName = value', desc: 'Create or update a variable.', insert: 'set score = 0' },
-        { cmd: 'vari,varName', desc: 'Use a variable inside say or other commands.', insert: 'say Your score is vari,score' },
+        { cmd: 'vari,varName', desc: 'Use a variable inside say.', insert: 'say Your score is vari,score' },
     ]},
     { group: 'Conditions', items: [
-        { cmd: 'i varName == value\n  ...\nenif', desc: 'If block. Supports ==, !=, >=, <=, >, <.', insert: 'i score >= 10\n  say You win!\nenif' },
+        { cmd: 'i varName == value\\n  ...\\nenif', desc: 'If block. Supports ==, !=, >=, <=, >, <.', insert: 'i score >= 10\\n  say You win!\\nenif' },
     ]},
     { group: 'Arrays', items: [
-        { cmd: 'ar arrayName = a,b,c', desc: 'Define an array with comma-separated values.', insert: 'ar colors = red,green,blue' },
+        { cmd: 'ar arrayName = a,b,c', desc: 'Define an array.', insert: 'ar colors = red,green,blue' },
     ]},
     { group: 'Math', items: [
-        { cmd: 'calc result = a OP b', desc: 'Math: a=add, s=subtract, m=multiply, d=divide.', insert: 'calc total = score a 10' },
+        { cmd: 'calc result = a OP b', desc: 'Math: a=add s=sub m=mul d=div', insert: 'calc total = score a 10' },
     ]},
     { group: 'Loops', items: [
-        { cmd: 'rep N\n  ...\nenrep', desc: 'Repeat a block N times.', insert: 'rep 3\n  say Hello!\nenrep' },
-        { cmd: 'whi varName OP value\n  ...\nenwhi', desc: 'While loop — repeats while condition is true.', insert: 'whi count < 5\n  say vari,count\n  calc count = count a 1\nenwhi' },
+        { cmd: 'rep N\\n  ...\\nenrep', desc: 'Repeat N times.', insert: 'rep 3\\n  say Hello!\\nenrep' },
+        { cmd: 'whi var OP val\\n  ...\\nenwhi', desc: 'While loop.', insert: 'whi count < 5\\n  say vari,count\\n  calc count = count a 1\\nenwhi' },
     ]},
     { group: 'Functions', items: [
-        { cmd: 'fun funcName\n  ...\nendf', desc: 'Define a reusable function.', insert: 'fun greet\n  say Hello vari,name!\nendf' },
-        { cmd: 'call funcName', desc: 'Call (run) a function.', insert: 'call greet' },
+        { cmd: 'fun funcName\\n  ...\\nendf', desc: 'Define a function.', insert: 'fun greet\\n  say Hello vari,name!\\nendf' },
+        { cmd: 'call funcName', desc: 'Call a function.', insert: 'call greet' },
     ]},
     { group: 'String Tools', items: [
-        { cmd: 'joi,var1 var2', desc: 'Join two variables into var1 (with a space).', insert: 'joi,firstName lastName' },
-        { cmd: 'upp varName', desc: 'Convert variable to uppercase.', insert: 'upp name' },
-        { cmd: 'low varName', desc: 'Convert variable to lowercase.', insert: 'low name' },
-        { cmd: 'len varName resultVar', desc: 'Get the length (character count) of a variable.', insert: 'len name nameLength' },
+        { cmd: 'joi,var1 var2', desc: 'Join two variables.', insert: 'joi,firstName lastName' },
+        { cmd: 'upp varName', desc: 'Uppercase.', insert: 'upp name' },
+        { cmd: 'low varName', desc: 'Lowercase.', insert: 'low name' },
+        { cmd: 'len varName resultVar', desc: 'Get length.', insert: 'len name nameLength' },
     ]},
     { group: 'Random', items: [
-        { cmd: 'rnd varName min max', desc: 'Generate a random integer between min and max.', insert: 'rnd dice 1 6' },
+        { cmd: 'rnd varName min max', desc: 'Random int between min and max.', insert: 'rnd dice 1 6' },
     ]},
     { group: 'Comments', items: [
-        { cmd: '// comment text', desc: 'A comment — not run, just notes for you.', insert: '// This is a comment' },
+        { cmd: '// comment text', desc: 'A comment — not executed.', insert: '// This is a comment' },
     ]},
 ];
 
-// ══════════════════════ TOAST ══════════════════════
 window.showToast = (msg) => {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2500);
 };
 
-// ══════════════════════ SAVING ══════════════════════
 window.saveFiles = () => {
     const ed = document.getElementById('mainEditor');
     if (ed) files[activeFile] = ed.value;
     localStorage.setItem('vik_pro_files', JSON.stringify(files));
     document.getElementById('save-status').textContent = 'Synced';
-    addActivity(`Saved project state`);
+    addActivity('Saved project state');
     showToast('Saved successfully!');
     updateAllUI();
 };
 
-// Load saved local files on startup if present
-if (localStorage.getItem('vik_pro_files')) {
-    try {
-        files = JSON.parse(localStorage.getItem('vik_pro_files'));
-        activeFile = Object.keys(files)[0] || 'main.vik';
-    } catch(e) {}
-}
-
-// ══════════════════════ DIAGNOSTIC DIALOG SYSTEM ══════════════════════
 window.showCustomModal = (title, text) => {
     document.getElementById('info-modal-title').innerHTML = title;
     document.getElementById('info-modal-text').innerHTML = text;
     document.getElementById('info-modal').style.display = 'flex';
 };
+window.closeInfoModal = () => { document.getElementById('info-modal').style.display = 'none'; };
 
-window.closeInfoModal = () => {
-    document.getElementById('info-modal').style.display = 'none';
-};
-
-// Handler for authentication exceptions
 function handleAuthError(err) {
-    console.warn("Intercepted Auth Exception:", err);
     if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('auth/unauthorized-domain'))) {
-        const currentDomain = window.location.hostname || "vikco.qzz.io";
-        window.showCustomModal(
-            "🔒 Firebase Domain Blocked",
-            `Your Firebase auth domain configuration does not permit OAuth operations from your current preview domain:<br/><br/>` +
-            `<span class="text-neon bg-black/40 px-2 py-1 block rounded font-bold text-center border border-white/5 my-2 select-all">${currentDomain}</span>` +
-            `<strong>To resolve this and activate Google/GitHub login:</strong><br/>` +
-            `1. Open your <strong class="text-neon">Firebase Console</strong>.<br/>` +
-            `2. Select your project: <code class="text-white">vikproject-de5f8</code>.<br/>` +
-            `3. Go to <strong class="text-white">Authentication &rarr; Settings &rarr; Authorized domains</strong>.<br/>` +
-            `4. Click <strong>"Add Domain"</strong> and insert <code class="text-neon">${currentDomain}</code>.<br/><br/>` +
-            `<em>Note: You can still click "Enter Anonymous Sandbox" to build, edit, and test your code with Vik AI immediately without OAuth!</em>`
-        );
+        const d = window.location.hostname;
+        window.showCustomModal('🔒 Firebase Domain Blocked',
+            `OAuth login is blocked from <strong>${d}</strong>.<br/><br/>Add this domain to your Firebase Console → Authentication → Authorized Domains.<br/><br/><em>You can still use "Enter Anonymous Sandbox" to code and use Vik AI immediately!</em>`);
     } else {
-        window.showToast(`Auth Error: ${err.message || err}`);
+        showToast(`Auth Error: ${err.message || err}`);
     }
 }
 
-// Global hook to catch unhandled async auth rejections during startup checks
-window.addEventListener('unhandledrejection', (event) => {
-    if (event.reason && (event.reason.code === 'auth/unauthorized-domain' || (event.reason.message && event.reason.message.includes('auth/unauthorized-domain')))) {
-        event.preventDefault(); // Stop raw red logs in console
-        handleAuthError(event.reason);
+window.addEventListener('unhandledrejection', (e) => {
+    if (e.reason && (e.reason.code === 'auth/unauthorized-domain' || (e.reason.message && e.reason.message.includes('auth/unauthorized-domain')))) {
+        e.preventDefault(); handleAuthError(e.reason);
     }
 });
 
-// ══════════════════════ AUTH ══════════════════════
 onAuthStateChanged(auth, (user) => {
     document.getElementById('auth-loading').style.display = 'none';
     document.getElementById('auth-controls').style.display = user ? 'none' : 'block';
@@ -893,40 +1064,17 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-window.loginAnon = async () => {
-    try {
-        await signInAnonymously(auth);
-    } catch (err) {
-        handleAuthError(err);
-    }
-};
-
-window.loginGoogle = async () => {
-    try {
-        await signInWithPopup(auth, new GoogleAuthProvider());
-    } catch (err) {
-        handleAuthError(err);
-    }
-};
-
-window.loginGithub = async () => {
-    try {
-        await signInWithPopup(auth, new GithubAuthProvider());
-    } catch (err) {
-        handleAuthError(err);
-    }
-};
-
+window.loginAnon = async () => { try { await signInAnonymously(auth); } catch(err) { handleAuthError(err); } };
+window.loginGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(err) { handleAuthError(err); } };
+window.loginGithub = async () => { try { await signInWithPopup(auth, new GithubAuthProvider()); } catch(err) { handleAuthError(err); } };
 window.handleLogout = () => { signOut(auth); };
 
-// ══════════════════════ VIEW MANAGEMENT ══════════════════════
 window.showView = (id) => {
-    document.querySelectorAll('.view').forEach(v => { v.classList.remove('active'); v.style.display = 'none'; });
+    document.querySelectorAll('.view').forEach(v => { v.classList.remove('active','view-enter'); v.style.display = 'none'; });
     const target = document.getElementById(id + '-view');
     if (!target) return;
     if (id === 'workspace') {
         target.style.display = 'grid';
-        target.classList.add('active');
         document.body.style.overflow = 'hidden';
         setTimeout(() => {
             renderFileTree(); renderTabs(); renderSyntaxPanel();
@@ -936,20 +1084,26 @@ window.showView = (id) => {
         }, 0);
     } else {
         target.style.display = 'flex';
-        target.classList.add('active');
         document.body.style.overflow = '';
         if (id === 'dashboard') updateAllUI();
+        if (id === 'hero') {
+            document.querySelectorAll('#hero-view .reveal').forEach(el => { el.classList.remove('visible'); });
+            setTimeout(() => {
+                document.querySelectorAll('#hero-view .reveal').forEach(el => el.classList.add('visible'));
+            }, 50);
+        }
     }
+    target.classList.add('active');
+    requestAnimationFrame(() => target.classList.add('view-enter'));
 };
 
-// ══════════════════════ UI ══════════════════════
 function updateAllUI() { renderFileTree(); renderTabs(); renderDashboard(); updateStats(); renderSyntaxPanel(); }
 
 function updateStats() {
     const names = Object.keys(files);
-    const totalLines = names.reduce((acc,n) => acc + files[n].split('\n').length, 0);
+    const totalLines = names.reduce((acc,n) => acc + files[n].split('\\n').length, 0);
     let fnCount = 0;
-    names.forEach(n => { fnCount += (files[n].match(/^fun\s/gm) || []).length; });
+    names.forEach(n => { fnCount += (files[n].match(/^fun\\s/gm)||[]).length; });
     const sf = document.getElementById('stat-files'); if(sf) sf.textContent = names.length;
     const sl = document.getElementById('stat-lines'); if(sl) sl.textContent = totalLines > 999 ? (totalLines/1000).toFixed(1)+'k' : totalLines;
     const sfn = document.getElementById('stat-fns'); if(sfn) sfn.textContent = fnCount;
@@ -961,7 +1115,7 @@ function renderDashboard() {
     const names = Object.keys(files).sort();
     if (!names.length) { c.innerHTML = '<div style="font-size:10px;color:var(--text-muted);padding:1.5rem 0">No files yet.</div>'; return; }
     names.forEach(name => {
-        const lines = (files[name].match(/\n/g)||[]).length + 1;
+        const lines = (files[name].match(/\\n/g)||[]).length + 1;
         const d = document.createElement('div'); d.className = 'file-card';
         d.innerHTML = `<div class="file-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div><div class="file-card-name">${name}</div><div class="file-card-meta">${lines} lines · local workspace</div></div>`;
         d.onclick = () => { activeFile = name; showView('workspace'); };
@@ -977,7 +1131,6 @@ function addActivity(msg) {
     c.innerHTML = activityLog.slice(0,10).map(a => `<div class="activity-line"><span class="ts">${a.ts}</span><span>${a.msg}</span></div>`).join('');
 }
 
-// ══════════════════════ FILE TREE + TABS ══════════════════════
 window.renderFileTree = () => {
     const list = document.getElementById('file-list'); if (!list) return;
     list.innerHTML = '';
@@ -992,16 +1145,15 @@ window.renderFileTree = () => {
 
 window.renderTabs = () => {
     const c = document.getElementById('ide-tabs'); if (!c) return;
-    const plusBtn = c.querySelector('.tab-new-btn');
     c.innerHTML = '';
     Object.keys(files).sort().forEach(name => {
         const btn = document.createElement('button');
         btn.className = `ide-tab${name === activeFile ? ' active' : ''}`;
-        btn.innerHTML = `${name} <button class="close-tab" onclick="event.stopPropagation();closeTab('${name}')">×</button>`;
+        btn.innerHTML = `${name} <button class="close-tab" onclick="event.stopPropagation();closeTab('${name}')\">×</button>`;
         btn.onclick = () => openFileInEditor(name);
         c.appendChild(btn);
     });
-    if (plusBtn) c.appendChild(plusBtn); else { const b = document.createElement('button'); b.className='tab-new-btn'; b.textContent='＋'; b.onclick=openNewFile; c.appendChild(b); }
+    const b = document.createElement('button'); b.className='tab-new-btn'; b.textContent='＋'; b.onclick=openNewFile; c.appendChild(b);
 };
 
 window.closeTab = (name) => {
@@ -1024,50 +1176,32 @@ function openFileInEditor(name) {
     addActivity(`Opened ${name}`);
 }
 
-// ══════════════════════ NEW/DELETE FILE MODALS ══════════════════════
 window.openNewFile = () => {
     document.getElementById('new-file-name').value = '';
     document.getElementById('new-file-modal').style.display = 'flex';
-    document.getElementById('new-file-name').focus();
+    setTimeout(() => document.getElementById('new-file-name').focus(), 50);
 };
-window.closeNewFileModal = () => {
-    document.getElementById('new-file-modal').style.display = 'none';
-};
+window.closeNewFileModal = () => { document.getElementById('new-file-modal').style.display = 'none'; };
 window.confirmNewFile = () => {
-    const rawInput = document.getElementById('new-file-name').value.trim();
-    if(!rawInput) return;
-    const cleanName = rawInput.endsWith('.vik') ? rawInput : rawInput + '.vik';
-    if(files[cleanName] !== undefined) {
-        showToast('File already exists');
-        return;
-    }
-    files[cleanName] = `// ${cleanName} initiated\nsay Starting development on ${cleanName}…\n`;
-    activeFile = cleanName;
-    closeNewFileModal();
-    window.saveFiles();
+    const raw = document.getElementById('new-file-name').value.trim(); if(!raw) return;
+    const name = raw.endsWith('.vik') ? raw : raw + '.vik';
+    if(files[name] !== undefined) { showToast('File already exists'); return; }
+    files[name] = `// ${name} initiated\\nsay Starting development on ${name}…\\n`;
+    activeFile = name; closeNewFileModal(); window.saveFiles();
 };
 window.deleteActiveFile = () => {
-    if(Object.keys(files).length <= 1) {
-        showToast('Cannot delete last file');
-        return;
-    }
-    const nextActive = Object.keys(files).find(k => k !== activeFile);
-    delete files[activeFile];
-    activeFile = nextActive;
-    window.saveFiles();
-    showToast('File deleted');
+    if(Object.keys(files).length <= 1) { showToast('Cannot delete last file'); return; }
+    const next = Object.keys(files).find(k => k !== activeFile);
+    delete files[activeFile]; activeFile = next;
+    window.saveFiles(); showToast('File deleted');
 };
 window.loadExample = () => {
-    files['demo.vik'] = EXAMPLE_CODE;
-    activeFile = 'demo.vik';
-    showToast('Example demo.vik loaded!');
-    showView('workspace');
+    files['demo.vik'] = EXAMPLE_CODE; activeFile = 'demo.vik';
+    showToast('Example demo.vik loaded!'); showView('workspace');
 };
 
-// ══════════════════════ EDITOR ══════════════════════
 window.handleEditorInput = (el) => {
-    files[activeFile] = el.value;
-    updateGutter(el);
+    files[activeFile] = el.value; updateGutter(el);
     clearTimeout(window._saveTimer);
     window._saveTimer = setTimeout(window.saveFiles, 1400);
     document.getElementById('save-status').textContent = 'Saving…';
@@ -1078,8 +1212,7 @@ window.handleEditorKeydown = (e) => {
     if (e.key === 'Tab') {
         e.preventDefault();
         const s = el.selectionStart;
-        const end = el.selectionEnd;
-        el.value = el.value.substring(0, s) + '  ' + el.value.substring(end);
+        el.value = el.value.substring(0,s) + '  ' + el.value.substring(el.selectionEnd);
         el.selectionStart = el.selectionEnd = s + 2;
         window.handleEditorInput(el);
     }
@@ -1087,43 +1220,31 @@ window.handleEditorKeydown = (e) => {
 
 window.updateCursorPos = (el) => {
     const s = el.selectionStart;
-    const lines = el.value.substring(0, s).split('\n');
-    const row = lines.length;
-    const col = lines[lines.length - 1].length + 1;
-    document.getElementById('cursor-pos').textContent = `Ln ${row}, Col ${col}`;
+    const lines = el.value.substring(0,s).split('\\n');
+    document.getElementById('cursor-pos').textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length+1}`;
 };
 
 function updateGutter(el) {
-    const lineCount = el.value.split('\n').length;
-    const gutter = document.getElementById('gutter');
-    if (!gutter) return;
-    let text = '';
-    for (let i = 1; i <= lineCount; i++) {
-        text += i + '<br/>';
-    }
-    gutter.innerHTML = text;
+    const count = el.value.split('\\n').length;
+    const g = document.getElementById('gutter'); if(!g) return;
+    let t = ''; for(let i=1;i<=count;i++) t += i + '<br/>';
+    g.innerHTML = t;
 }
 
 window.syncGutterScroll = (el) => {
-    const gutter = document.getElementById('gutter');
-    if (gutter) {
-        gutter.scrollTop = el.scrollTop;
-    }
+    const g = document.getElementById('gutter');
+    if(g) g.scrollTop = el.scrollTop;
 };
 
-// ══════════════════════ SYNTAX PANEL ══════════════════════
 window.renderSyntaxPanel = () => {
-    const b = document.getElementById('syntax-body');
-    if (!b) return;
+    const b = document.getElementById('syntax-body'); if(!b) return;
     b.innerHTML = '';
     SYNTAX_REF.forEach(grp => {
-        const g = document.createElement('div');
-        g.className = 'syn-group';
-        g.innerHTML = `<div class="syn-group-title">${grp.group}</div>`;
+        const g = document.createElement('div'); g.className = 'syn-group';
+        g.innerHTML = `<div class=\"syn-group-title\">${grp.group}</div>`;
         grp.items.forEach(itm => {
-            const item = document.createElement('div');
-            item.className = 'syn-item';
-            item.innerHTML = `<div class="syn-item-cmd">${itm.cmd.replace(/\n/g, '<br/>')}</div><div class="syn-item-desc">${itm.desc}</div><div class="syn-insert-hint">Click to insert</div>`;
+            const item = document.createElement('div'); item.className = 'syn-item';
+            item.innerHTML = `<div class=\"syn-item-cmd\">${itm.cmd.replace(/\\n/g,'<br/>')}</div><div class=\"syn-item-desc\">${itm.desc}</div><div class=\"syn-insert-hint\">Click to insert</div>`;
             item.onclick = () => insertSnippet(itm.insert);
             g.appendChild(item);
         });
@@ -1132,43 +1253,26 @@ window.renderSyntaxPanel = () => {
 };
 
 function insertSnippet(snippet) {
-    const ed = document.getElementById('mainEditor');
-    if (!ed) return;
-    const start = ed.selectionStart;
-    const end = ed.selectionEnd;
-    const text = ed.value;
-    ed.value = text.substring(0, start) + snippet + text.substring(end);
-    ed.selectionStart = ed.selectionEnd = start + snippet.length;
-    ed.focus();
-    window.handleEditorInput(ed);
+    const ed = document.getElementById('mainEditor'); if(!ed) return;
+    const s = ed.selectionStart;
+    ed.value = ed.value.substring(0,s) + snippet + ed.value.substring(ed.selectionEnd);
+    ed.selectionStart = ed.selectionEnd = s + snippet.length;
+    ed.focus(); window.handleEditorInput(ed);
 }
 
 window.toggleSyntaxPanel = () => {
     syntaxPanelOpen = !syntaxPanelOpen;
     const p = document.getElementById('syntax-panel');
-    if (syntaxPanelOpen) {
-        p.classList.add('open');
-        if (aiPanelOpen) window.toggleAIPanel();
-    } else {
-        p.classList.remove('open');
-    }
+    if(syntaxPanelOpen) { p.classList.add('open'); if(aiPanelOpen) window.toggleAIPanel(); }
+    else { p.classList.remove('open'); }
 };
 
 window.toggleAIPanel = () => {
     aiPanelOpen = !aiPanelOpen;
     const p = document.getElementById('ai-panel');
-    if (aiPanelOpen) {
-        p.classList.add('open');
-        if (syntaxPanelOpen) window.toggleSyntaxPanel();
-    } else {
-        p.classList.remove('open');
-    }
+    if(aiPanelOpen) { p.classList.add('open'); if(syntaxPanelOpen) window.toggleSyntaxPanel(); }
+    else { p.classList.remove('open'); }
 };
-
-// ══════════════════════ TERMINAL SYSTEM ══════════════════════
-let outputBuffer = [];
-let problemsBuffer = [];
-let logBuffer = [];
 
 window.switchTermTab = (tab) => {
     activeTerminalTab = tab;
@@ -1177,143 +1281,97 @@ window.switchTermTab = (tab) => {
     renderTerminalContent();
 };
 
-function appendToTerminal(text, type = 'out') {
+function appendToTerminal(text, type='out') {
     const item = { text, type, ts: new Date().toLocaleTimeString() };
-    if (type === 'err') {
-        problemsBuffer.push(item);
-    }
-    if (type === 'log') {
-        logBuffer.push(item);
-    } else {
-        outputBuffer.push(item);
-    }
-    renderTerminalContent();
+    if(type === 'err') problemsBuffer.push(item);
+    else if(type === 'log') logBuffer.push(item);
+    else outputBuffer.push(item);
+    if(activeTerminalTab === 'output' || (type === 'err' && activeTerminalTab === 'problems') || (type === 'log' && activeTerminalTab === 'log'))
+        renderTerminalContent();
 }
 
 function renderTerminalContent() {
-    const t = document.getElementById('terminal');
-    if (!t) return;
-    let buffer = [];
-    if (activeTerminalTab === 'output') buffer = outputBuffer;
-    else if (activeTerminalTab === 'problems') buffer = problemsBuffer;
-    else if (activeTerminalTab === 'log') buffer = logBuffer;
-
-    if (buffer.length === 0) {
-        t.innerHTML = `<div class="t-line"><span class="t-prompt">▶</span><span class="t-out">No entries in ${activeTerminalTab}.</span></div>`;
-        return;
-    }
-
-    t.innerHTML = buffer.map(item => {
-        let cls = 't-out';
-        if (item.type === 'err') cls = 't-err';
-        else if (item.type === 'success') cls = 't-success';
-        else if (item.type === 'warn') cls = 't-warn';
-        else if (item.type === 'prompt') cls = 't-input-prompt';
-
-        return `<div class="t-line"><span class="t-prompt">[${item.ts}] ▶</span><span class="${cls}">${escapeHTML(item.text)}</span></div>`;
+    const t = document.getElementById('terminal'); if(!t) return;
+    let buf = activeTerminalTab === 'problems' ? problemsBuffer : activeTerminalTab === 'log' ? logBuffer : outputBuffer;
+    if(!buf.length) { t.innerHTML = `<div class=\"t-line\"><span class=\"t-prompt\">▶</span><span class=\"t-out\">No entries in ${activeTerminalTab}.</span></div>`; return; }
+    t.innerHTML = buf.map(item => {
+        let cls = item.type === 'err' ? 't-err' : item.type === 'success' ? 't-success' : item.type === 'warn' ? 't-warn' : item.type === 'prompt' ? 't-input-prompt' : 't-out';
+        return `<div class=\"t-line\"><span class=\"t-prompt\">[${item.ts}] ▶</span><span class=\"${cls}\">${escapeHTML(item.text)}</span></div>`;
     }).join('');
     t.scrollTop = t.scrollHeight;
 }
 
 window.clearTerminal = () => {
-    if (activeTerminalTab === 'output') outputBuffer = [];
-    else if (activeTerminalTab === 'problems') problemsBuffer = [];
-    else if (activeTerminalTab === 'log') logBuffer = [];
+    if(activeTerminalTab === 'output') outputBuffer = [];
+    else if(activeTerminalTab === 'problems') problemsBuffer = [];
+    else logBuffer = [];
     renderTerminalContent();
 };
 
-function escapeHTML(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function escapeHTML(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function getVal(v) {
+    if(v === undefined) return 0;
+    if(variables[v] !== undefined) return variables[v];
+    const n = parseFloat(v); return isNaN(n) ? v : n;
 }
 
-// ══════════════════════ ASYNC INTERPRETER ══════════════════════
-let variables = {};
-let functions = {};
-let inputPromiseResolver = null;
+function replaceVars(s) {
+    return s.replace(/vari,(\\w+)/g, (_,n) => {
+        const v = variables[n];
+        return v !== undefined ? (Array.isArray(v) ? v.join(',') : String(v)) : n;
+    });
+}
 
 window.resolveInput = () => {
     const inp = document.getElementById('input-modal-field');
     const val = inp.value;
     document.getElementById('input-modal').style.display = 'none';
-    if (inputPromiseResolver) {
-        const res = inputPromiseResolver;
-        inputPromiseResolver = null;
-        res(val);
-    }
+    if(inputPromiseResolver) { const r = inputPromiseResolver; inputPromiseResolver = null; r(val); }
 };
 
-async function askUser(question, numberOnly = false) {
+async function askUser(question, numberOnly=false) {
     document.getElementById('input-modal-question').textContent = question;
     const inp = document.getElementById('input-modal-field');
-    inp.value = '';
-    document.getElementById('input-modal').style.display = 'flex';
-    inp.focus();
-
-    return new Promise((resolve) => {
+    inp.value = ''; document.getElementById('input-modal').style.display = 'flex'; inp.focus();
+    return new Promise(resolve => {
         inputPromiseResolver = (val) => {
-            if (numberOnly) {
-                const parsed = parseFloat(val);
-                resolve(isNaN(parsed) ? 0 : parsed);
-            } else {
-                resolve(val);
-            }
+            if(numberOnly) { const p = parseFloat(val); resolve(isNaN(p) ? 0 : p); }
+            else resolve(val);
         };
     });
 }
 
 window.runCode = async () => {
-    const ed = document.getElementById('mainEditor');
-    if (!ed) return;
+    const ed = document.getElementById('mainEditor'); if(!ed) return;
     const code = ed.value;
-    outputBuffer = [];
-    problemsBuffer = [];
-    logBuffer = [];
-    variables = {};
-    functions = {};
+    outputBuffer = []; problemsBuffer = []; logBuffer = [];
+    variables = {}; functions = {};
     window.switchTermTab('output');
-
-    appendToTerminal('Initializing Vik Script execution environment…', 'log');
-    
-    const lines = code.split('\n').map(l => l.trim());
-    try {
-        await executeInstructions(lines);
-        appendToTerminal('Execution complete successfully.', 'success');
-    } catch (e) {
-        appendToTerminal(`Runtime error: ${e.message}`, 'err');
-        window.switchTermTab('problems');
-    }
+    appendToTerminal('Initializing Vik Script…', 'log');
+    const lines = code.split('\\n').map(l => l.trim());
+    try { await executeInstructions(lines); appendToTerminal('Execution complete.', 'success'); }
+    catch(e) { appendToTerminal(`Runtime error: ${e.message}`, 'err'); window.switchTermTab('problems'); }
 };
 
 async function executeInstructions(lines) {
     let index = 0;
-
-    // First scan: Register all functions
-    while (index < lines.length) {
+    while(index < lines.length) {
         const line = lines[index];
-        if (line.startsWith('fun ')) {
+        if(line.startsWith('fun ')) {
             const funcName = line.split(' ')[1];
-            if (!funcName) throw new Error(`Missing function name at line ${index+1}`);
-            let funcBody = [];
-            index++;
-            while (index < lines.length && lines[index] !== 'endf') {
-                funcBody.push(lines[index]);
-                index++;
-            }
-            if (index >= lines.length) throw new Error(`Unclosed function declaration ${funcName}`);
-            functions[funcName] = funcBody;
+            if(!funcName) throw new Error(`Missing function name at line ${index+1}`);
+            let body = []; index++;
+            while(index < lines.length && lines[index] !== 'endf') { body.push(lines[index]); index++; }
+            if(index >= lines.length) throw new Error(`Unclosed function ${funcName}`);
+            functions[funcName] = body;
         }
         index++;
     }
-
-    // Second scan: Real instruction interpreter
     index = 0;
-    while (index < lines.length) {
+    while(index < lines.length) {
         const line = lines[index];
-        if (!line || line.startsWith('//') || line.startsWith('fun ') || line === 'endf') {
-            index++;
-            continue;
-        }
-
+        if(!line || line.startsWith('//') || line.startsWith('fun ') || line === 'endf') { index++; continue; }
         index = await parseLine(line, lines, index);
     }
 }
@@ -1321,443 +1379,169 @@ async function executeInstructions(lines) {
 async function parseLine(line, lines, index) {
     const parts = line.split(' ');
     const cmd = parts[0];
-
-    // say message
-    if (cmd === 'say') {
-        let msg = line.substring(4);
-        msg = replaceVars(msg);
-        appendToTerminal(msg, 'out');
-        index++;
-        return index;
+    if(cmd === 'say') { appendToTerminal(replaceVars(line.substring(4)), 'out'); return index+1; }
+    if(cmd === 'get' || cmd === 'getIn') {
+        const varName = parts[1]; if(!varName) throw new Error(`Missing variable on line ${index+1}`);
+        const q = replaceVars(parts.slice(2).join(' '));
+        appendToTerminal(`[Prompt]: ${q}`, 'warn');
+        variables[varName] = await askUser(q, cmd === 'getIn');
+        appendToTerminal(`${varName} = ${variables[varName]}`, 'log');
+        return index+1;
     }
-
-    // get / getIn
-    if (cmd === 'get' || cmd === 'getIn') {
-        const varName = parts[1];
-        if (!varName) throw new Error(`Syntax error: Missing variable target in input operation on line ${index+1}`);
-        const question = replaceVars(parts.slice(2).join(' '));
-        appendToTerminal(`[Prompting user]: ${question}`, 'warn');
-        const ans = await askUser(question, cmd === 'getIn');
-        variables[varName] = ans;
-        appendToTerminal(`User inputs ${varName} = ${ans}`, 'log');
-        index++;
-        return index;
+    if(cmd === 'set') {
+        const eq = line.indexOf('='); if(eq === -1) throw new Error(`Syntax error on line ${index+1}`);
+        const vn = line.substring(3,eq).trim(); let val = line.substring(eq+1).trim();
+        if(val === 'true') variables[vn] = true;
+        else if(val === 'false') variables[vn] = false;
+        else if(!isNaN(parseFloat(val))) variables[vn] = parseFloat(val);
+        else variables[vn] = replaceVars(val);
+        return index+1;
     }
-
-    // set varName = value
-    if (cmd === 'set') {
-        const eqIdx = line.indexOf('=');
-        if (eqIdx === -1) throw new Error(`Syntax error in variable declaration on line ${index+1}`);
-        const varName = line.substring(3, eqIdx).trim();
-        let valueStr = line.substring(eqIdx + 1).trim();
-        
-        // Try parsing string, boolean, or numbers
-        if (valueStr === 'true') variables[varName] = true;
-        else if (valueStr === 'false') variables[varName] = false;
-        else if (!isNaN(parseFloat(valueStr))) variables[varName] = parseFloat(valueStr);
-        else variables[varName] = replaceVars(valueStr);
-        index++;
-        return index;
+    if(cmd === 'calc') {
+        const eq = line.indexOf('='); if(eq === -1) throw new Error(`Syntax error on line ${index+1}`);
+        const vn = line.substring(4,eq).trim(); const expr = line.substring(eq+1).trim().split(' ');
+        let a = getVal(expr[0]), op = expr[1], b = getVal(expr[2]);
+        let res = op==='a'?a+b:op==='s'?a-b:op==='m'?a*b:op==='d'?(b!==0?a/b:0):0;
+        variables[vn] = res; return index+1;
     }
-
-    // calc result = a OP b
-    if (cmd === 'calc') {
-        const eqIdx = line.indexOf('=');
-        if (eqIdx === -1) throw new Error(`Syntax error: Missing equivalence in calculation on line ${index+1}`);
-        const varName = line.substring(4, eqIdx).trim();
-        const expr = line.substring(eqIdx + 1).trim().split(' ');
-        if (expr.length < 3) throw new Error(`Syntax error: Invalid calculation expression on line ${index+1}`);
-        
-        let a = getVal(expr[0]);
-        let op = expr[1];
-        let b = getVal(expr[2]);
-
-        let res = 0;
-        if (op === 'a') res = a + b;
-        else if (op === 's') res = a - b;
-        else if (op === 'm') res = a * b;
-        else if (op === 'd') res = b !== 0 ? a / b : 0;
-        else throw new Error(`Unsupported math operator '${op}' on line ${index+1}`);
-
-        variables[varName] = res;
-        index++;
-        return index;
+    if(cmd === 'i') {
+        let [,v1,op,v2] = parts;
+        let val1 = getVal(v1), val2 = getVal(v2);
+        let ok = op==='=='?val1==val2:op==='!='?val1!=val2:op==='>='?val1>=val2:op==='<='?val1<=val2:op==='>'?val1>val2:val1<val2;
+        if(ok) return index+1;
+        let depth=1,ti=index+1;
+        while(ti<lines.length) { if(lines[ti].startsWith('i '))depth++; if(lines[ti]==='enif')depth--; if(depth===0)break; ti++; }
+        return ti+1;
     }
-
-    // Conditionals (i val1 OP val2 ... enif)
-    if (cmd === 'i') {
-        let op = parts[2];
-        let val1 = getVal(parts[1]);
-        let val2 = getVal(parts[3]);
-
-        let truthy = false;
-        if (op === '==') truthy = val1 == val2;
-        else if (op === '!=') truthy = val1 != val2;
-        else if (op === '>=') truthy = val1 >= val2;
-        else if (op === '<=') truthy = val1 <= val2;
-        else if (op === '>') truthy = val1 > val2;
-        else if (op === '<') truthy = val1 < val2;
-
-        if (truthy) {
-            index++; // Just advance into block
-            return index;
-        } else {
-            // Find corresponding enif at same depth
-            let depth = 1;
-            let tempIdx = index + 1;
-            while (tempIdx < lines.length) {
-                if (lines[tempIdx].startsWith('i ')) depth++;
-                if (lines[tempIdx] === 'enif') depth--;
-                if (depth === 0) break;
-                tempIdx++;
-            }
-            if (tempIdx >= lines.length) throw new Error(`Missing corresponding enif closure starting from line ${index+1}`);
-            index = tempIdx + 1; // skip beyond enif
-            return index;
+    if(cmd === 'enif') return index+1;
+    if(cmd === 'ar') {
+        const eq = line.indexOf('='); if(eq===-1) throw new Error(`Array syntax on line ${index+1}`);
+        variables[line.substring(2,eq).trim()] = line.substring(eq+1).trim().split(',').map(x=>x.trim());
+        return index+1;
+    }
+    if(cmd === 'rep') {
+        const n = getVal(parts[1]); let body=[],depth=1,ti=index+1;
+        while(ti<lines.length) { if(lines[ti].startsWith('rep '))depth++; if(lines[ti]==='enrep')depth--; if(depth===0)break; body.push(lines[ti]); ti++; }
+        for(let r=0;r<n;r++) await executeInstructions(body);
+        return ti+1;
+    }
+    if(cmd === 'whi') {
+        let [,v1,op,v2str]=parts; let body=[],depth=1,ti=index+1;
+        while(ti<lines.length) { if(lines[ti].startsWith('whi '))depth++; if(lines[ti]==='enwhi')depth--; if(depth===0)break; body.push(lines[ti]); ti++; }
+        let safety=5000;
+        while(true) {
+            let a=getVal(v1),b=getVal(v2str);
+            let ok=op==='=='?a==b:op==='!='?a!=b:op==='>='?a>=b:op==='<='?a<=b:op==='>'?a>b:a<b;
+            if(!ok)break; await executeInstructions(body);
+            if(--safety<=0) throw new Error(`Infinite loop safety limit reached`);
         }
+        return ti+1;
     }
-
-    if (cmd === 'enif') {
-        index++;
-        return index;
+    if(cmd === 'enrep' || cmd === 'enwhi') return index+1;
+    if(cmd === 'call') {
+        const fn = parts[1]; if(!functions[fn]) throw new Error(`Undefined function '${fn}'`);
+        await executeInstructions(functions[fn]); return index+1;
     }
-
-    // Arrays (ar arrayName = red,green,blue)
-    if (cmd === 'ar') {
-        const eqIdx = line.indexOf('=');
-        if (eqIdx === -1) throw new Error(`Syntax error: Invalid array definition on line ${index+1}`);
-        const varName = line.substring(2, eqIdx).trim();
-        const vals = line.substring(eqIdx + 1).trim().split(',').map(x => x.trim());
-        variables[varName] = vals;
-        index++;
-        return index;
+    if(cmd.startsWith('joi,')) {
+        const t = cmd.substring(4), s = parts[1];
+        if(variables[t]!==undefined&&variables[s]!==undefined) variables[t] = String(variables[t])+' '+String(variables[s]);
+        return index+1;
     }
-
-    // Repeat Loops (rep N ... enrep)
-    if (cmd === 'rep') {
-        const n = getVal(parts[1]);
-        let loopBody = [];
-        let depth = 1;
-        let tempIdx = index + 1;
-        while (tempIdx < lines.length) {
-            if (lines[tempIdx].startsWith('rep ')) depth++;
-            if (lines[tempIdx] === 'enrep') depth--;
-            if (depth === 0) break;
-            loopBody.push(lines[tempIdx]);
-            tempIdx++;
-        }
-        if (tempIdx >= lines.length) throw new Error(`Missing loop closure enrep starting from line ${index+1}`);
-        
-        for (let run = 0; run < n; run++) {
-            await executeInstructions(loopBody);
-        }
-        index = tempIdx + 1;
-        return index;
+    if(cmd === 'upp') { if(variables[parts[1]]!==undefined) variables[parts[1]]=String(variables[parts[1]]).toUpperCase(); return index+1; }
+    if(cmd === 'low') { if(variables[parts[1]]!==undefined) variables[parts[1]]=String(variables[parts[1]]).toLowerCase(); return index+1; }
+    if(cmd === 'len') {
+        const s=parts[1],d=parts[2];
+        if(variables[s]!==undefined&&d) variables[d]=Array.isArray(variables[s])?variables[s].length:String(variables[s]).length;
+        return index+1;
     }
-
-    // While Loops (whi varName OP value ... enwhi)
-    if (cmd === 'whi') {
-        let op = parts[2];
-        let var1Name = parts[1];
-        let val2 = getVal(parts[3]);
-
-        let loopBody = [];
-        let depth = 1;
-        let tempIdx = index + 1;
-        while (tempIdx < lines.length) {
-            if (lines[tempIdx].startsWith('whi ')) depth++;
-            if (lines[tempIdx] === 'enwhi') depth--;
-            if (depth === 0) break;
-            loopBody.push(lines[tempIdx]);
-            tempIdx++;
-        }
-        if (tempIdx >= lines.length) throw new Error(`Missing loop closure enwhi starting from line ${index+1}`);
-
-        let safetyLimit = 5000;
-        while (true) {
-            let val1 = getVal(var1Name);
-            let checkVal2 = getVal(parts[3]);
-            let truthy = false;
-            if (op === '==') truthy = val1 == checkVal2;
-            else if (op === '!=') truthy = val1 != checkVal2;
-            else if (op === '>=') truthy = val1 >= checkVal2;
-            else if (op === '<=') truthy = val1 <= checkVal2;
-            else if (op === '>') truthy = val1 > checkVal2;
-            else if (op === '<') truthy = val1 < checkVal2;
-
-            if (!truthy) break;
-            await executeInstructions(loopBody);
-            
-            safetyLimit--;
-            if (safetyLimit <= 0) {
-                throw new Error(`Infinite loop safety limit exceeded in whi starting from line ${index+1}`);
-            }
-        }
-        index = tempIdx + 1;
-        return index;
+    if(cmd === 'rnd') {
+        const t=parts[1],mn=getVal(parts[2]),mx=getVal(parts[3]);
+        if(t) variables[t]=Math.floor(Math.random()*(mx-mn+1))+mn; return index+1;
     }
-
-    if (cmd === 'enrep' || cmd === 'enwhi') {
-        index++;
-        return index;
-    }
-
-    // Call function
-    if (cmd === 'call') {
-        const funcName = parts[1];
-        if (!functions[funcName]) throw new Error(`Undefined function reference '${funcName}' on line ${index+1}`);
-        await executeInstructions(functions[funcName]);
-        index++;
-        return index;
-    }
-
-    // String manipulation commands
-    if (cmd.startsWith('joi,')) {
-        const targetVar = cmd.substring(4);
-        const secondVar = parts[1];
-        if (variables[targetVar] !== undefined && variables[secondVar] !== undefined) {
-            variables[targetVar] = String(variables[targetVar]) + ' ' + String(variables[secondVar]);
-        }
-        index++;
-        return index;
-    }
-
-    if (cmd === 'upp') {
-        const target = parts[1];
-        if (variables[target] !== undefined) {
-            variables[target] = String(variables[target]).toUpperCase();
-        }
-        index++;
-        return index;
-    }
-
-    if (cmd === 'low') {
-        const target = parts[1];
-        if (variables[target] !== undefined) {
-            variables[target] = String(variables[target]).toLowerCase();
-        }
-        index++;
-        return index;
-    }
-
-    if (cmd === 'len') {
-        const src = parts[1];
-        const dest = parts[2];
-        if (variables[src] !== undefined && dest) {
-            variables[dest] = Array.isArray(variables[src]) ? variables[src].length : String(variables[src]).length;
-        }
-        index++;
-        return index;
-    }
-
-    if (cmd === 'rnd') {
-        const target = parts[1];
-        const min = getVal(parts[2]);
-        const max = getVal(parts[3]);
-        if (target) {
-            variables[target] = Math.floor(Math.random() * (max - min + 1)) + min;
-        }
-        index++;
-        return index;
-    }
-
-    index++;
-    return index;
+    return index+1;
 }
 
-// ══════════════════════ GEMINI AI CO-PILOT ══════════════════════
+// AI
 window.sendAIMessage = async () => {
     const inp = document.getElementById('ai-input');
-    const msg = inp.value.trim();
-    if (!msg) return;
-
-    inp.value = '';
-    appendAIMessage(msg, 'user');
-
-    // Create prompt assembly
-    const editorVal = document.getElementById('mainEditor')?.value || '';
-    const systemPrompt = `You are Vik AI, a friendly programming assistant integrated within the Vik Pro Cloud IDE.
-Your core task is helping users design, analyze, debug, and expand on "Vik Script".
-Here is the Vik Script Syntax Reference you must strictly adhere to when writing code:
-- Output: say <text> (Support placeholders like vari,varName)
-- Input: get <var> <question> (string), getIn <var> <question> (numeric)
-- Vars: set <var> = <value>
-- Conds: i <val1> <op> <val2> ... enif (Operators: ==, !=, >, <, >=, <=)
-- Arrays: ar <name> = val1,val2,val3
-- Math: calc <res> = <val1> <op> <val2> (Operators: a, s, m, d)
-- Loops: rep <N> ... enrep, whi <var> <op> <val> ... enwhi
-- Functions: fun <name> ... endf, and call with: call <name>
-- String Tools: joi,<var1> <var2>, upp <var>, low <var>, len <var> <result>
-- Random: rnd <var> <min> <max>
-Keep answers precise and brief. Format code cleanly. Highlight issues.`;
-
-    const fullPrompt = `The current file content under edit is:
-\`\`\`vik
-${editorVal}
-\`\`\`
-
-User question: ${msg}`;
-
-    appendAIMessage("Thinking…", "assistant", true);
-
+    const msg = inp.value.trim(); if(!msg) return;
+    inp.value = ''; appendAIMessage(msg,'user');
+    const edVal = document.getElementById('mainEditor')?.value || '';
+    const sys = `You are Vik AI, a friendly assistant in Vik Pro IDE. Help users with Vik Script. Vik Script syntax: say <text>, get <var> <q>, getIn <var> <q>, set <var>=<val>, i <v1> <op> <v2>...enif, ar <n>=a,b, calc <r>=<a><op><b>(ops:a/s/m/d), rep N...enrep, whi...enwhi, fun...endf, call <name>, joi,<v1> <v2>, upp/low/len <v>, rnd <v> <min> <max>. Be brief and precise.`;
+    appendAIMessage('Thinking…','assistant',true);
     try {
-        const textResponse = await fetchGeminiWithRetry(fullPrompt, systemPrompt);
-        removeLoadingAIMessage();
-        appendAIMessage(textResponse, 'assistant');
+        const text = await fetchGeminiWithRetry(`Current file:\\n\\\`\\\`\\\`\\n${edVal}\\n\\\`\\\`\\\`\\nUser: ${msg}`, sys);
+        removeLoadingAIMessage(); appendAIMessage(text,'assistant');
     } catch(err) {
-        removeLoadingAIMessage();
-        appendAIMessage(`Connection issue: Unable to reach Gemini core servers. Error: ${err.message}`, 'assistant');
+        removeLoadingAIMessage(); appendAIMessage(`Connection error: ${err.message}`,'assistant');
     }
 };
 
-async function fetchGeminiWithRetry(prompt, systemPrompt) {
-    let activeKey = apiKey; // Default empty environment key
-    if (aiKeyStrategy === 'custom' && customGeminiKey) {
-        activeKey = customGeminiKey;
-    }
-
-    const modelToUse = selectedAIModel || "gemini-2.5-flash-preview-09-2025";
+async function fetchGeminiWithRetry(prompt, sys) {
+    let key = apiKey;
+    if(aiKeyStrategy==='custom'&&customGeminiKey) key = customGeminiKey;
+    const model = selectedAIModel || 'gemini-2.5-flash-preview-09-2025';
     let delay = 1000;
-    for (let attempt = 1; attempt <= 5; attempt++) {
+    for(let attempt=1;attempt<=5;attempt++) {
         try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelToUse}:generateContent?key=${activeKey}`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] }
-                })
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`,{
+                method:'POST',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({contents:[{parts:[{text:prompt}]}],systemInstruction:{parts:[{text:sys}]}})
             });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-            return data.candidates?.[0]?.content?.parts?.[0]?.text || "No output returned.";
-        } catch (e) {
-            if (attempt === 5) throw e;
-            await new Promise(r => setTimeout(r, delay));
-            delay *= 2;
+            if(!r.ok) throw new Error(`HTTP ${r.status}`);
+            const d = await r.json();
+            return d.candidates?.[0]?.content?.parts?.[0]?.text || 'No output.';
+        } catch(e) {
+            if(attempt===5) throw e;
+            await new Promise(r=>setTimeout(r,delay)); delay*=2;
         }
     }
 }
 
-// Ensure favicon.ico requests don't cause console errors
-const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-link.type = 'image/x-icon';
-link.rel = 'shortcut icon';
-link.href = 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>';
-document.getElementsByTagName('head')[0].appendChild(link);
-
-function appendAIMessage(text, sender, isLoading = false) {
-    const c = document.getElementById('ai-messages');
-    if (!c) return;
-    const d = document.createElement('div');
-    d.className = `ai-msg ${sender}`;
-    if (isLoading) d.id = 'ai-loading-bubble';
-    
-    // Formatting plain response
-    d.innerHTML = `<strong>${sender === 'user' ? 'You' : 'Vik AI'}</strong><br/>${escapeHTML(text).replace(/\n/g, '<br/>')}`;
-    c.appendChild(d);
-    c.scrollTop = c.scrollHeight;
+function appendAIMessage(text, sender, isLoading=false) {
+    const c = document.getElementById('ai-messages'); if(!c) return;
+    const d = document.createElement('div'); d.className=`ai-msg ${sender}`;
+    if(isLoading) d.id='ai-loading-bubble';
+    d.innerHTML = `<strong>${sender==='user'?'You':'Vik AI'}</strong><br/>${escapeHTML(text).replace(/\\n/g,'<br/>')}`;
+    c.appendChild(d); c.scrollTop = c.scrollHeight;
 }
+function removeLoadingAIMessage() { const el=document.getElementById('ai-loading-bubble'); if(el) el.remove(); }
 
-function removeLoadingAIMessage() {
-    const el = document.getElementById('ai-loading-bubble');
-    if (el) el.remove();
-}
-
-// ══════════════════════ AI PANEL CONFIG TOGGLES ══════════════════════
 window.toggleAISettings = () => {
-    const chatView = document.getElementById('ai-chat-view');
-    const settingsView = document.getElementById('ai-settings-view');
-    if (!chatView || !settingsView) return;
-
-    if (chatView.style.display === 'none') {
-        chatView.style.display = 'flex';
-        settingsView.style.display = 'none';
-    } else {
-        chatView.style.display = 'none';
-        settingsView.style.display = 'flex';
-        // Hydrate current input state
+    const cv=document.getElementById('ai-chat-view'),sv=document.getElementById('ai-settings-view');
+    if(!cv||!sv) return;
+    if(cv.style.display==='none') { cv.style.display='flex'; sv.style.display='none'; }
+    else {
+        cv.style.display='none'; sv.style.display='flex';
         document.getElementById('ai-key-strategy').value = aiKeyStrategy;
         document.getElementById('custom-gemini-key').value = customGeminiKey;
         document.getElementById('ai-model-select').value = selectedAIModel;
         window.handleKeyStrategyChange(aiKeyStrategy);
     }
 };
-
-window.handleKeyStrategyChange = (val) => {
-    const customKeyContainer = document.getElementById('custom-key-container');
-    if (!customKeyContainer) return;
-
-    if (val === 'custom') {
-        customKeyContainer.style.display = 'block';
-    } else {
-        customKeyContainer.style.display = 'none';
-    }
+window.handleKeyStrategyChange = (v) => {
+    const c=document.getElementById('custom-key-container'); if(!c) return;
+    c.style.display = v==='custom' ? 'block' : 'none';
 };
-
 window.toggleKeyVisibility = () => {
-    const keyInput = document.getElementById('custom-gemini-key');
-    if (!keyInput) return;
-    keyInput.type = keyInput.type === 'password' ? 'text' : 'password';
+    const i=document.getElementById('custom-gemini-key'); if(!i) return;
+    i.type = i.type==='password'?'text':'password';
 };
-
 window.saveAISettings = () => {
     aiKeyStrategy = document.getElementById('ai-key-strategy').value;
     customGeminiKey = document.getElementById('custom-gemini-key').value.trim();
     selectedAIModel = document.getElementById('ai-model-select').value;
-
-    localStorage.setItem('ai_key_strategy', aiKeyStrategy);
-    localStorage.setItem('custom_gemini_key', customGeminiKey);
-    localStorage.setItem('selected_ai_model', selectedAIModel);
-
-    showToast("AI preferences stored successfully!");
-    window.toggleAISettings(); // Return to active chat thread
+    localStorage.setItem('ai_key_strategy',aiKeyStrategy);
+    localStorage.setItem('custom_gemini_key',customGeminiKey);
+    localStorage.setItem('selected_ai_model',selectedAIModel);
+    showToast('AI preferences saved!'); window.toggleAISettings();
 };
 
-// ══════════════════════ MATRIX CANVAS ANIMATION ══════════════════════
-const canvas = document.getElementById('canvas-bg');
-const ctx = canvas.getContext('2d');
-
-function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-
-const chars = "0101010101ABCDEFGHIJKLMNOPQRSTUVWXYZVIK_PRO_SYSTEMS_";
-const fontSize = 11;
-let columns = Math.floor(canvas.width / fontSize);
-let drops = Array(columns).fill(1);
-
-function drawMatrix() {
-    ctx.fillStyle = "rgba(7, 7, 7, 0.08)";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#39ff14";
-    ctx.font = `${fontSize}px monospace`;
-
-    // Handle viewport changes gracefully
-    const colsCount = Math.floor(canvas.width / fontSize);
-    if (colsCount > drops.length) {
-        drops = drops.concat(Array(colsCount - drops.length).fill(1));
-    }
-
-    for (let i = 0; i < drops.length; i++) {
-        const text = chars.charAt(Math.floor(Math.random() * chars.length));
-        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-
-        if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
-            drops[i] = 0;
-        }
-        drops[i]++;
-    }
-}
-setInterval(drawMatrix, 40);
-
-// Initialize setup
 window.onload = () => {
     updateAllUI();
+    setTimeout(() => {
+        document.querySelectorAll('#hero-view .reveal').forEach(el => el.classList.add('visible'));
+    }, 200);
 };
 </script>
 </body>
