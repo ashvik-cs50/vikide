@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <link rel="apple-touch-icon" href="/icon.svg">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vik Pro | Ultimate Cloud IDE</title>
@@ -371,6 +372,85 @@
         .toast { position:fixed; bottom:2rem; right:2rem; z-index:999; background:var(--glass); border:1px solid var(--border-bright); backdrop-filter:blur(20px); padding:11px 18px; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--neon); transform:translateY(70px) scale(0.95); opacity:0; transition:all 0.35s cubic-bezier(0.22,1,0.36,1); pointer-events:none; max-width:300px; box-shadow:0 8px 40px rgba(0,0,0,0.6); }
         .toast.show { transform:translateY(0) scale(1); opacity:1; }
 
+        /* ── SHIMMER / GLOW ── */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        .shimmer {
+            background: linear-gradient(90deg, rgba(57,255,20,0.04) 25%, rgba(57,255,20,0.12) 50%, rgba(57,255,20,0.04) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+        @keyframes glow-pulse {
+            0%, 100% { box-shadow: 0 0 8px rgba(57,255,20,0.3); }
+            50% { box-shadow: 0 0 24px rgba(57,255,20,0.6); }
+        }
+        .glow-pulse { animation: glow-pulse 2s infinite; }
+
+        /* ── LANGUAGES GRID ── */
+        .languages-section { padding: 6rem 2rem; background: radial-gradient(ellipse 50% 50% at 30% 50%, rgba(57,255,20,0.03) 0%, transparent 70%); }
+        .lang-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--border); margin-top: 3rem; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .lang-card { background: var(--bg); padding: 2rem 1.5rem; text-align: center; transition: background 0.3s, transform 0.3s; cursor: default; }
+        .lang-card:hover { background: rgba(57,255,20,0.03); transform: translateY(-4px); }
+        .lang-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+        .lang-name { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
+        .lang-count { font-size: 8px; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.15em; text-transform: uppercase; }
+
+        /* ── TESTIMONIALS ── */
+        .testimonials-section { padding: 6rem 2rem; }
+        .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-top: 3rem; max-width: 900px; margin-left: auto; margin-right: auto; }
+        .testimonial-card {
+            background: var(--panel); border: 1px solid var(--border); padding: 1.75rem;
+            transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(10px); position: relative;
+        }
+        .testimonial-card:hover { border-color: var(--neon); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(57,255,20,0.1); }
+        .testimonial-card::before { content: '"'; position: absolute; top: 8px; left: 14px; font-size: 3rem; color: var(--neon); opacity: 0.2; font-weight: 900; font-style: italic; line-height: 1; }
+        .testimonial-text { font-size: 10px; line-height: 1.8; color: var(--text-muted); margin-bottom: 1rem; font-style: italic; padding-top: 0.5rem; }
+        .testimonial-author { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
+        .testimonial-role { font-size: 8px; color: var(--neon); letter-spacing: 0.15em; text-transform: uppercase; margin-top: 2px; opacity: 0.7; }
+
+        /* ── FOOTER ── */
+        .site-footer {
+            border-top: 1px solid var(--border); padding: 3rem 2rem;
+            background: rgba(5,5,8,0.6); backdrop-filter: blur(10px);
+        }
+        .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 2rem; }
+        .footer-col-title { font-size: 8px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--neon); margin-bottom: 1rem; opacity: 0.7; }
+        .footer-link { display: block; font-size: 9px; color: var(--text-muted); text-decoration: none; padding: 3px 0; transition: color 0.2s; cursor: pointer; background: none; border: none; font-family: inherit; }
+        .footer-link:hover { color: var(--neon); }
+        .footer-bottom { max-width: 1100px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+
+        /* ── ACCESSIBILITY & RESPONSIVE ── */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+        *:focus-visible { outline: 1px solid var(--neon); outline-offset: 2px; }
+        @media (max-width: 768px) {
+            nav { padding: 0 1rem; }
+            .nav-links { gap: 0.75rem; }
+            .nav-link { font-size: 8px; letter-spacing: 0.06em; }
+            .hero-above-fold { padding: 3rem 1rem; }
+            .features-section { padding: 4rem 1rem; }
+            .features-grid { grid-template-columns: 1fr; }
+            .code-preview-section { padding: 4rem 1rem; }
+            .code-window-body { padding: 1rem; font-size: 10px; }
+            .cta-section { padding: 5rem 1rem; }
+            .dashboard-content { padding: 2rem 1rem 4rem; }
+            .ide-body { grid-template-columns: 1fr; }
+            .ide-sidebar { display: none; }
+            .stats-bar { gap: 2rem; padding: 1rem; }
+            .stat-num { font-size: 1.4rem; }
+            .testimonials-section { padding: 4rem 1rem; }
+            .languages-section { padding: 4rem 1rem; }
+            .site-footer { padding: 2rem 1rem; }
+            .footer-bottom { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 480px) {
+            .ide-syntax-panel.open { width: 100% !important; position: fixed; inset: 0; z-index: 300; }
+            .ide-ai-panel.open { width: 100% !important; position: fixed; inset: 0; z-index: 300; }
+            .tilt-card { max-width: 100%; margin: 0 0.5rem; }
+        }
+
         /* AI Settings */
         select { -webkit-appearance: none; }
     </style>
@@ -526,6 +606,80 @@
             <button class="btn-outline" onclick="loginAnon()">Try the Sandbox</button>
         </div>
     </div>
+
+    <!-- SUPPORTED LANGUAGES -->
+    <div class="languages-section">
+        <div style="max-width:1100px;margin:0 auto;text-align:center">
+            <p class="section-label reveal">Learn & Code</p>
+            <h2 class="section-title reveal reveal-delay-1">Supported <span style="color:var(--neon)">Languages.</span></h2>
+            <div class="lang-grid reveal reveal-delay-2">
+                <div class="lang-card"><span class="lang-icon">🐍</span><div class="lang-name">Python</div><div class="lang-count">3 lessons</div></div>
+                <div class="lang-card"><span class="lang-icon">☕</span><div class="lang-name">Java</div><div class="lang-count">1 lesson</div></div>
+                <div class="lang-card"><span class="lang-icon">🌐</span><div class="lang-name">Web</div><div class="lang-count">4 lessons</div></div>
+                <div class="lang-card"><span class="lang-icon">⚡</span><div class="lang-name">C++</div><div class="lang-count">1 lesson</div></div>
+                <div class="lang-card"><span class="lang-icon">🧠</span><div class="lang-name">Algorithms</div><div class="lang-count">2 lessons</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="testimonials-section">
+        <div style="max-width:1100px;margin:0 auto;text-align:center">
+            <p class="section-label reveal">From the community</p>
+            <h2 class="section-title reveal reveal-delay-1">What learners <span style="color:var(--neon)">say.</span></h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card reveal">
+                    <div class="testimonial-text">Vik Script made programming click for me. The plain English commands meant I could focus on logic, not syntax errors. Built my first real project in a weekend!</div>
+                    <div class="testimonial-author">— Alex Chen</div>
+                    <div class="testimonial-role">First-year CS Student</div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-1">
+                    <div class="testimonial-text">I've been teaching coding for 5 years. Vik Pro is the first tool I've found that truly bridges the gap between complete beginners and real programming concepts. The built-in interpreter is genius.</div>
+                    <div class="testimonial-author">— Sarah Mitchell</div>
+                    <div class="testimonial-role">High School CS Teacher</div>
+                </div>
+                <div class="testimonial-card reveal reveal-delay-2">
+                    <div class="testimonial-text">My 12-year-old went from zero to writing a calculator app with loops and functions in under an hour. Vik Script's get/say/calc pattern is incredibly intuitive for newcomers.</div>
+                    <div class="testimonial-author">— Marcus Johnson</div>
+                    <div class="testimonial-role">Parent & Developer</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div>
+                <div class="footer-col-title">VIK_PRO</div>
+                <button class="footer-link" onclick="showView('hero')">Home</button>
+                <button class="footer-link" onclick="loginAnon()">Sandbox</button>
+                <a class="footer-link" href="https://vikco.qzz.io" target="_blank">Visit Site</a>
+            </div>
+            <div>
+                <div class="footer-col-title">Languages</div>
+                <span class="footer-link" style="cursor:default">Python · Java · Web</span>
+                <span class="footer-link" style="cursor:default">C++ · Algorithms</span>
+                <span class="footer-link" style="cursor:default">Vik Script</span>
+            </div>
+            <div>
+                <div class="footer-col-title">Resources</div>
+                <button class="footer-link" onclick="toggleSyntaxPanel();showView('workspace')">Syntax Reference</button>
+                <button class="footer-link" onclick="loadExample()">Example Code</button>
+                <a class="footer-link" href="https://aistudio.google.com/" target="_blank">Gemini API</a>
+            </div>
+            <div>
+                <div class="footer-col-title">System</div>
+                <span class="footer-link" style="cursor:default">v4.0.2</span>
+                <span class="footer-link" style="cursor:default">Engine: Active</span>
+                <span class="footer-link" style="cursor:default">Cloud Sync: Local</span>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 VIKco — Vik Pro Cloud IDE</span>
+            <span>Built with Vik Script · Powered by Gemini</span>
+        </div>
+    </footer>
 </section>
 
 <!-- DASHBOARD -->
@@ -1535,6 +1689,44 @@ window.saveAISettings = () => {
     localStorage.setItem('custom_gemini_key',customGeminiKey);
     localStorage.setItem('selected_ai_model',selectedAIModel);
     showToast('AI preferences saved!'); window.toggleAISettings();
+};
+
+// Keyboard shortcuts + file download
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); window.saveFiles(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        const ws = document.getElementById('workspace-view');
+        if (ws && ws.style.display !== 'none') runCode();
+        return;
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openNewFile(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') { e.preventDefault(); toggleSyntaxPanel(); return; }
+    if (e.key === 'Escape') {
+        const fm = document.getElementById('new-file-modal');
+        if (fm.style.display !== 'none') { closeNewFileModal(); return; }
+        const im = document.getElementById('info-modal');
+        if (im.style.display !== 'none') { closeInfoModal(); return; }
+        const ipm = document.getElementById('input-modal');
+        if (ipm.style.display !== 'none') {
+            ipm.style.display = 'none';
+            if(inputPromiseResolver) { const r = inputPromiseResolver; inputPromiseResolver = null; r(''); }
+        }
+    }
+});
+
+window.downloadFile = () => {
+    const ed = document.getElementById('mainEditor');
+    if (!ed) return;
+    const content = ed.value || '';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = activeFile || 'code.vik';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    addActivity('Downloaded ' + activeFile);
+    showToast('Downloaded ' + activeFile);
 };
 
 window.onload = () => {
