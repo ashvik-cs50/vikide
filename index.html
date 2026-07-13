@@ -497,17 +497,43 @@
         <div id="auth-loading" style="font-size:9px;letter-spacing:0.3em;text-transform:uppercase;color:var(--neon);animation:pulse 1.5s infinite">BOOTING_CORE_SYSTEMS…</div>
         <div id="auth-controls" style="display:none;width:100%" class="reveal reveal-delay-3">
             <div class="tilt-card" id="auth-card">
-                <p class="auth-title">Sign in to your workspace</p>
-                <button class="auth-btn auth-btn-google" onclick="loginGoogle()">
-                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
-                    Continue with Google
-                </button>
-                <button class="auth-btn auth-btn-github" onclick="loginGithub()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
-                    Continue with GitHub
-                </button>
+                <!-- Tab buttons -->
+                <div style="display:flex;gap:0;margin-bottom:1.5rem;border-bottom:1px solid var(--border);">
+                    <button id="tab-btn-login" class="auth-tab-btn active" onclick="switchAuthTab('login')" style="flex:1;background:none;border:none;padding:8px 0;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--neon);cursor:pointer;border-bottom:2px solid var(--neon);transition:all 0.2s;">Sign In</button>
+                    <button id="tab-btn-register" class="auth-tab-btn" onclick="switchAuthTab('register')" style="flex:1;background:none;border:none;padding:8px 0;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;">Sign Up</button>
+                </div>
+                
+                <!-- Sign In form -->
+                <div id="auth-tab-login">
+                    <form onsubmit="submitLogin(event)">
+                        <label for="login-email" style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Email</label>
+                        <input type="email" id="login-email" placeholder="your@email.com" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:12px;padding:9px 12px;outline:none;margin-bottom:12px;transition:border-color 0.2s;">
+                        
+                        <label for="login-password" style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Password</label>
+                        <input type="password" id="login-password" placeholder="••••••••" required minlength="6" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:12px;padding:9px 12px;outline:none;margin-bottom:1.25rem;transition:border-color 0.2s;">
+                        
+                        <button type="submit" id="auth-btn-login" class="btn-primary" style="width:100%;justify-content:center;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);padding:12px;">SIGN IN</button>
+                    </form>
+                </div>
+                
+                <!-- Sign Up form -->
+                <div id="auth-tab-register" style="display:none;">
+                    <form onsubmit="submitRegister(event)">
+                        <label for="reg-username" style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Username</label>
+                        <input type="text" id="reg-username" placeholder="alice" required minlength="3" maxlength="20" pattern="[a-zA-Z0-9_]+" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:12px;padding:9px 12px;outline:none;margin-bottom:12px;transition:border-color 0.2s;">
+                        
+                        <label for="reg-email" style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Email</label>
+                        <input type="email" id="reg-email" placeholder="your@email.com" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:12px;padding:9px 12px;outline:none;margin-bottom:12px;transition:border-color 0.2s;">
+                        
+                        <label for="reg-password" style="font-size:8px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:var(--text-muted);display:block;margin-bottom:4px;">Password</label>
+                        <input type="password" id="reg-password" placeholder="••••••••" required minlength="6" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:#fff;font-family:inherit;font-size:12px;padding:9px 12px;outline:none;margin-bottom:1.25rem;transition:border-color 0.2s;">
+                        
+                        <button type="submit" id="auth-btn-register" class="btn-primary" style="width:100%;justify-content:center;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);padding:12px;">CREATE ACCOUNT</button>
+                    </form>
+                </div>
+                
                 <div class="auth-divider">— OR —</div>
-                <button class="auth-anon" onclick="loginAnon()">Enter Anonymous Sandbox</button>
+                <button class="auth-anon" onclick="apiAnon()">Enter Anonymous Sandbox</button>
             </div>
         </div>
     </div>
@@ -1083,17 +1109,7 @@ initReveal();
 </script>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-import { getAuth, signInAnonymously, GithubAuthProvider, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAUGjwz-arbvz1Cea5eK9DnwxGbb7ajNws",
-    authDomain: "vikproject-de5f8.firebaseapp.com",
-    projectId: "vikproject-de5f8",
-    appId: "1:631154429286:web:ea1e410f68a51b97250ca7"
-};
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 
 const EXAMPLE_CODE = `// Vik Script — Example Program\nget name What is your name?\ngetIn age How old are you?\nsay Hello vari,name! Welcome to Vik Script!\ni age >= 18\n  say You are an adult.\nenif\ni age >= 13\n  say Hey there, teenager!\nenif\nar colors = red,green,blue\nsay Your color list: vari,colors\ncalc double_age = age a age\nsay Your age doubled is: vari,double_age\nfun greet\n  say Welcome vari,name to Vik Script!\nendf\ncall greet\n`;
 
@@ -1183,30 +1199,23 @@ window.showCustomModal = (title, text) => {
 window.closeInfoModal = () => { document.getElementById('info-modal').style.display = 'none'; };
 
 function handleAuthError(err) {
-    if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('auth/unauthorized-domain'))) {
-        const d = window.location.hostname;
-        window.showCustomModal('🔒 Firebase Domain Blocked',
-            `OAuth login is blocked from <strong>${d}</strong>.<br/><br/>Add this domain to your Firebase Console → Authentication → Authorized Domains.<br/><br/><em>You can still use "Enter Anonymous Sandbox" to code and use Vik AI immediately!</em>`);
-    } else {
-        showToast(`Auth Error: ${err.message || err}`);
-    }
+    showToast('Error: ' + (err.message || err));
 }
 
-window.addEventListener('unhandledrejection', (e) => {
-    if (e.reason && (e.reason.code === 'auth/unauthorized-domain' || (e.reason.message && e.reason.message.includes('auth/unauthorized-domain')))) {
-        e.preventDefault(); handleAuthError(e.reason);
-    }
-});
 
-onAuthStateChanged(auth, (user) => {
+
+// Check auth state from localStorage token
+function checkAuthState() {
+    const token = localStorage.getItem('vik_token');
+    const userData = localStorage.getItem('vik_user');
     document.getElementById('auth-loading').style.display = 'none';
-    document.getElementById('auth-controls').style.display = user ? 'none' : 'block';
-    if (user) {
-        const name = user.displayName || user.email || ('anon_' + user.uid.substring(0,6));
+    document.getElementById('auth-controls').style.display = token && userData ? 'none' : 'block';
+    if (token && userData) {
+        const user = JSON.parse(userData);
         document.getElementById('nav-links').style.display = 'flex';
         document.getElementById('user-pill').style.display = 'flex';
-        document.getElementById('username').textContent = name.toUpperCase();
-        document.getElementById('greeting-text').textContent = user.isAnonymous ? 'Sandbox_Session' : ('Welcome, ' + name.split(' ')[0]);
+        document.getElementById('username').textContent = (user.displayName || user.username || 'Guest').toUpperCase();
+        document.getElementById('greeting-text').textContent = 'Welcome, ' + (user.displayName || user.username || 'User');
         document.getElementById('sync-indicator').style.display = 'block';
         addActivity('Client authorization granted');
         showView('dashboard');
@@ -1216,12 +1225,112 @@ onAuthStateChanged(auth, (user) => {
         document.getElementById('sync-indicator').style.display = 'none';
         showView('hero');
     }
-});
+}
+checkAuthState();
 
-window.loginAnon = async () => { try { await signInAnonymously(auth); } catch(err) { handleAuthError(err); } };
-window.loginGoogle = async () => { try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch(err) { handleAuthError(err); } };
-window.loginGithub = async () => { try { await signInWithPopup(auth, new GithubAuthProvider()); } catch(err) { handleAuthError(err); } };
-window.handleLogout = () => { signOut(auth); };
+const API_BASE = 'https://api.vikco.qzz.io/api';
+
+// API Authentication functions
+window.apiRegister = async (username, email, password, displayName) => {
+    const res = await fetch(API_BASE + '/auth/register', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, email, password, displayName })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Registration failed');
+    localStorage.setItem('vik_token', data.token);
+    localStorage.setItem('vik_user', JSON.stringify(data.user));
+    return data;
+};
+
+window.apiLogin = async (email, password) => {
+    const res = await fetch(API_BASE + '/auth/login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    localStorage.setItem('vik_token', data.token);
+    localStorage.setItem('vik_user', JSON.stringify(data.user));
+    return data;
+};
+
+window.apiLogout = async () => {
+    const token = localStorage.getItem('vik_token');
+    if (token) {
+        try {
+            await fetch(API_BASE + '/auth/logout', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+        } catch(e) { /* ignore logout errors */ }
+    }
+    localStorage.removeItem('vik_token');
+    localStorage.removeItem('vik_user');
+    checkAuthState();
+};
+
+// Anonymous login: generate random credentials
+window.apiAnon = async () => {
+    const randomId = Math.random().toString(36).substring(2, 8);
+    const username = 'anon_' + randomId;
+    const email = username + '@sandbox.vik';
+    const password = randomId + 'sandbox';
+    try {
+        await window.apiRegister(username, email, password);
+        showToast('Entering anonymous sandbox…');
+    } catch(e) {
+        // If username taken (unlikely), try again
+        await window.apiRegister(username + '_', email, password);
+    }
+    checkAuthState();
+};
+
+window.handleLogout = () => { window.apiLogout(); };
+
+// Form submit handlers
+window.submitRegister = async (e) => {
+    if (e) e.preventDefault();
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    buttonState('auth-btn-register', 'CREATING…', true);
+    try {
+        await window.apiRegister(username, email, password);
+        checkAuthState();
+    } catch(e) {
+        showToast('Register: ' + e.message);
+        buttonState('auth-btn-register', 'CREATE ACCOUNT', false);
+    }
+};
+
+window.submitLogin = async (e) => {
+    if (e) e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    buttonState('auth-btn-login', 'SIGNING IN…', true);
+    try {
+        await window.apiLogin(email, password);
+        checkAuthState();
+    } catch(e) {
+        showToast('Login: ' + e.message);
+        buttonState('auth-btn-login', 'SIGN IN', false);
+    }
+};
+
+function buttonState(id, text, disabled) {
+    const btn = document.getElementById(id);
+    if (btn) { btn.textContent = text; btn.disabled = disabled; }
+}
+
+// Tab switching in auth card
+window.switchAuthTab = (tab) => {
+    document.getElementById('auth-tab-login').style.display = tab === 'login' ? 'block' : 'none';
+    document.getElementById('auth-tab-register').style.display = tab === 'register' ? 'block' : 'none';
+    document.querySelectorAll('.auth-tab-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('tab-btn-' + tab);
+    if (btn) btn.classList.add('active');
+};
 
 window.showView = (id) => {
     document.querySelectorAll('.view').forEach(v => { v.classList.remove('active','view-enter'); v.style.display = 'none'; });
