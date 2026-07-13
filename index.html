@@ -422,7 +422,49 @@
         .footer-link:hover { color: var(--neon); }
         .footer-bottom { max-width: 1100px; margin: 2rem auto 0; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 8px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 
-        /* ── ACCESSIBILITY & RESPONSIVE ── */
+                /* ── PROJECT CARDS (CLOUD SYNC) ── */
+        .project-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(280px,1fr)); gap: 1rem; }
+        .project-card {
+            background: var(--panel); border: 1px solid var(--border); padding: 1.25rem;
+            display: flex; align-items: flex-start; gap: 12px;
+            transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+            backdrop-filter: blur(10px);
+        }
+        .project-card:hover { border-color: var(--neon); transform: translateY(-2px); box-shadow: 0 6px 24px rgba(57,255,20,0.12); }
+        .project-card-icon { width: 36px; height: 36px; background: var(--neon-dim); display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 2px; }
+        .project-card-icon svg { width: 16px; height: 16px; stroke: var(--neon); }
+        .project-card-body { flex: 1; min-width: 0; }
+        .project-card-name { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #fff; letter-spacing: 0.05em; display: flex; align-items: center; gap: 6px; }
+        .project-card-name .cloud-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--neon); flex-shrink: 0; }
+        .project-card-desc { font-size: 9px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .project-card-meta { font-size: 8px; color: var(--text-dim); margin-top: 4px; letter-spacing: 0.08em; }
+        .project-card-actions { display: flex; gap: 4px; margin-top: 8px; }
+        .project-btn {
+            background: none; border: 1px solid var(--border); color: var(--text-muted); cursor: pointer;
+            padding: 5px 12px; font-family: inherit; font-size: 8px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.08em; transition: all 0.2s;
+        }
+        .project-btn:hover { border-color: var(--neon); color: var(--neon); background: var(--neon-dim); }
+        .project-btn.danger:hover { border-color: #f87171; color: #f87171; background: rgba(248,113,113,0.08); }
+        .project-btn.primary { border-color: var(--neon-mid); color: var(--neon); }
+        .project-btn.primary:hover { background: var(--neon); color: #000; border-color: var(--neon); }
+        .section-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1rem; }
+        .section-tab {
+            background: none; border: none; padding: 8px 16px; font-family: inherit;
+            font-size: 8px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase;
+            color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+            transition: all 0.15s;
+        }
+        .section-tab.active { color: var(--neon); border-bottom-color: var(--neon); }
+        .section-tab:hover { color: rgba(255,255,255,0.6); }
+        .projects-empty {
+            text-align: center; padding: 3rem 1rem; font-size: 10px; color: var(--text-muted); line-height: 2;
+            border: 1px dashed var(--border); background: rgba(57,255,20,0.02);
+        }
+        .projects-empty .create-btn {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 1rem;
+        }
+/* ── ACCESSIBILITY & RESPONSIVE ── */
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
         *:focus-visible { outline: 1px solid var(--neon); outline-offset: 2px; }
         @media (max-width: 768px) {
@@ -840,9 +882,23 @@
                 <div class="quick-action-desc">Start with a sample program</div>
             </div>
         </div>
-        <div class="section-head">
-            <p class="section-head-title">Your Files</p>
-            <button class="btn-outline" onclick="openNewFile()" style="font-size:8px;padding:7px 14px">+ New File</button>
+        <div class="section-tabs" id="dashboard-tabs">
+            <button class="section-tab active" id="tab-cloud" onclick="switchDashTab('cloud')">☁️ Projects</button>
+            <button class="section-tab" id="tab-local" onclick="switchDashTab('local')">📁 Local Files</button>
+        </div>
+        <div id="cloud-projects-section" style="margin-bottom:2rem;display:block">
+            <div class="section-head" style="margin-bottom:1rem">
+                <p class="section-head-title">Cloud Projects</p>
+                <button class="btn-outline" onclick="createNewProject()" style="font-size:8px;padding:7px 14px">+ New Project</button>
+            </div>
+            <div class="project-grid" id="dashboard-projects"></div>
+        </div>
+        <div id="local-files-section" style="margin-bottom:2rem;display:none">
+            <div class="section-head" style="margin-bottom:1rem">
+                <p class="section-head-title">Local Files</p>
+                <button class="btn-outline" onclick="openNewFile()" style="font-size:8px;padding:7px 14px">+ New File</button>
+            </div>
+            <div class="files-grid" id="dashboard-files" style="margin-bottom:3rem"></div>
         </div>
         <div class="files-grid" id="dashboard-files" style="margin-bottom:3rem"></div>
         <div class="section-head" style="margin-bottom:1rem">
@@ -868,6 +924,10 @@
             <div class="toolbar-sep"></div>
             <button class="ide-toolbar-btn" onclick="window.saveFiles()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Save
+            </button>
+            <div class="toolbar-sep"></div>
+            <button class="ide-toolbar-btn text-neon" id="cloud-save-btn" onclick="saveToCloud()" title="Save to Cloud">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>Cloud
             </button>
             <div class="toolbar-sep"></div>
             <button class="ide-toolbar-btn" onclick="toggleSyntaxPanel()">
@@ -1308,16 +1368,236 @@ function checkAuthState() {
         document.getElementById('username').textContent = (user.displayName || user.username || 'Guest').toUpperCase();
         document.getElementById('greeting-text').textContent = 'Welcome, ' + (user.displayName || user.username || 'User');
         document.getElementById('sync-indicator').style.display = 'block';
+        const cloudBtn = document.getElementById('cloud-save-btn');
+        if (cloudBtn) cloudBtn.style.display = '';
         addActivity('Client authorization granted');
         showView('dashboard');
+        // Load cloud projects
+        requestAnimationFrame(() => renderCloudProjects());
     } else {
         document.getElementById('nav-links').style.display = 'none';
         document.getElementById('user-pill').style.display = 'none';
         document.getElementById('sync-indicator').style.display = 'none';
+        const cloudBtn = document.getElementById('cloud-save-btn');
+        if (cloudBtn) cloudBtn.style.display = 'none';
         showView('hero');
     }
 }
 checkAuthState();
+// Cloud project state tracking
+let currentProjectId = localStorage.getItem('vik_current_project_id') || null;
+let cloudProjects = [];
+
+// ── API: Fetch projects ──
+window.apiFetchProjects = async () => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) return [];
+    try {
+        const res = await fetch(API_BASE + '/projects', {
+            method: 'GET',
+            headers: { 'Authorization': 'Bearer ' + token }
+        });
+        if (!res.ok) return [];
+        const projects = await res.json();
+        cloudProjects = projects;
+        return projects;
+    } catch(e) {
+        console.error('Failed to fetch projects:', e);
+        return [];
+    }
+};
+
+// ── API: Create project ──
+window.apiCreateProject = async (name, description, language, code) => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(API_BASE + '/projects', {
+        method: 'POST', headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({ name, description: description || '', language: language || 'vik', code: code || '' })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to create project');
+    cloudProjects.unshift(data);
+    return data;
+};
+
+// ── API: Update project ──
+window.apiUpdateProject = async (id, data) => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(API_BASE + '/projects/' + id, {
+        method: 'PATCH', headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify(data)
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.error || 'Failed to update project');
+    const idx = cloudProjects.findIndex(p => p.id === id);
+    if (idx >= 0) cloudProjects[idx] = { ...cloudProjects[idx], ...data, ...result };
+    return result;
+};
+
+// ── API: Delete project ──
+window.apiDeleteProject = async (id) => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) throw new Error('Not authenticated');
+    const res = await fetch(API_BASE + '/projects/' + id, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete project');
+    cloudProjects = cloudProjects.filter(p => p.id !== id);
+    if (currentProjectId === id) {
+        currentProjectId = null;
+        localStorage.removeItem('vik_current_project_id');
+    }
+    return data;
+};
+
+// ── Load a cloud project into the editor ──
+window.loadProject = async (project) => {
+    // Check if we already have this project loaded - reuse the file
+    let filename = Object.keys(files).find(f => {
+        return files[f] === project.code || (activeFile === f && currentProjectId === project.id);
+    });
+    if (!filename) {
+        filename = (project.name || 'project').replace(/[^a-zA-Z0-9_\-]/g, '_') + '.vik';
+        files[filename] = project.code || '';
+    } else {
+        // Just update the code
+        files[filename] = project.code || '';
+    }
+    activeFile = filename;
+    currentProjectId = project.id;
+    localStorage.setItem('vik_current_project_id', project.id);
+    localStorage.setItem('vik_pro_files', JSON.stringify(files));
+    addActivity('Loaded project: ' + project.name);
+    showToast('\u2601\ufe0f Loaded: ' + project.name);
+    showView('workspace');
+};
+
+// ── Save current file to cloud ──
+window.saveToCloud = async () => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) {
+        showToast('Sign in to save to cloud');
+        return;
+    }
+    const ed = document.getElementById('mainEditor');
+    if (ed) files[activeFile] = ed.value;
+    const code = files[activeFile] || '';
+    const name = activeFile.replace(/.vik$/, '') || 'untitled';
+    try {
+        if (currentProjectId) {
+            await window.apiUpdateProject(currentProjectId, { code, name });
+            showToast('\u2601\ufe0f Saved to cloud!');
+            addActivity('Saved project to cloud');
+        } else {
+            const project = await window.apiCreateProject(name, '', 'vik', code);
+            currentProjectId = project.id;
+            localStorage.setItem('vik_current_project_id', project.id);
+            showToast('\u2601\ufe0f Created cloud project!');
+            addActivity('Created cloud project: ' + name);
+        }
+        document.getElementById('save-status').textContent = '\u2601 Cloud Synced';
+        await renderCloudProjects();
+    } catch(e) {
+        showToast('Cloud save failed: ' + e.message);
+    }
+};
+
+// ── Create new blank cloud project ──
+window.createNewProject = async () => {
+    const token = localStorage.getItem('vik_token');
+    if (!token) {
+        showToast('Sign in to create cloud projects');
+        return;
+    }
+    const name = prompt('Project name:', 'my_project');
+    if (!name || !name.trim()) return;
+    try {
+        const project = await window.apiCreateProject(name.trim(), '', 'vik', '');
+        await window.loadProject(project);
+    } catch(e) {
+        showToast('Failed to create project: ' + e.message);
+    }
+};
+
+// ── Render cloud projects in dashboard ──
+window.renderCloudProjects = async () => {
+    const container = document.getElementById('dashboard-projects');
+    if (!container) return;
+    const projects = cloudProjects.length ? cloudProjects : await window.apiFetchProjects();
+    if (!projects || projects.length === 0) {
+        container.innerHTML = '<div class="projects-empty">No cloud projects yet.<br/><button class="btn-outline create-btn" onclick="createNewProject()">+ Create Your First Project</button></div>';
+        return;
+    }
+    container.innerHTML = '';
+    projects.forEach(proj => {
+        const card = document.createElement('div');
+        card.className = 'project-card';
+        const lang = proj.language || 'vik';
+        const updated = proj.updated_at ? new Date(proj.updated_at + 'Z').toLocaleString() : 'Recently';
+        const isActive = proj.id === currentProjectId;
+        card.innerHTML = `
+            <div class="project-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
+            <div class="project-card-body">
+                <div class="project-card-name">
+                    ${isActive ? '<span class="cloud-dot"></span>' : ''}
+                    ${proj.name || 'Untitled'}
+                    ${isActive ? '<span style="font-size:7px;color:var(--neon);letter-spacing:0.1em;text-transform:uppercase;margin-left:auto">● Active</span>' : ''}
+                </div>
+                <div class="project-card-desc">${proj.description || lang.toUpperCase() + ' project'}</div>
+                <div class="project-card-meta">${updated} · ${lang.toUpperCase()}</div>
+                <div class="project-card-actions">
+                    <button class="project-btn primary" onclick="loadProject(cloudProjects.find(p=>p.id==='${proj.id}'))">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle;margin-right:3px"><polygon points="5 3 19 12 5 21 5 3"/></svg>Open
+                    </button>
+                    <button class="project-btn danger" onclick="confirmDeleteProject('${proj.id}')">Delete</button>
+                </div>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+};
+
+// ── Confirm and delete a project ──
+window.confirmDeleteProject = async (id) => {
+    if (!confirm('Delete this project? This cannot be undone.')) return;
+    try {
+        await window.apiDeleteProject(id);
+        await renderCloudProjects();
+        showToast('Project deleted');
+        addActivity('Deleted cloud project');
+    } catch(e) {
+        showToast('Delete failed: ' + e.message);
+    }
+};
+
+// ── Switch between Cloud Projects and Local Files tabs ──
+window.switchDashTab = (tab) => {
+    document.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    const cloudSection = document.getElementById('cloud-projects-section');
+    const localSection = document.getElementById('local-files-section');
+    if (tab === 'cloud') {
+        cloudSection.style.display = 'block';
+        localSection.style.display = 'none';
+        renderCloudProjects();
+    } else {
+        cloudSection.style.display = 'none';
+        localSection.style.display = 'block';
+        renderDashboard();
+    }
+};
+
+
 
 const API_BASE = 'https://api.vikco.qzz.io/api';
 
