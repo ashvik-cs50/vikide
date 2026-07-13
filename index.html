@@ -664,7 +664,7 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                 Get Started Free
             </button>
-            <button class="btn-outline" onclick="loginAnon()">Try the Sandbox</button>
+            <button class="btn-outline" onclick="apiAnon()">Try the Sandbox</button>
         </div>
     </div>
 
@@ -724,7 +724,7 @@
                         <li>Syntax reference panel</li>
                         <li>Anonymous sandbox access</li>
                     </ul>
-                    <button class="btn-outline" onclick="loginAnon()" style="width:100%">Try Free</button>
+                    <button class="btn-outline" onclick="apiAnon()" style="width:100%">Try Free</button>
                 </div>
                 <div class="pricing-card featured reveal reveal-delay-1">
                     <div class="pricing-name">Pro</div>
@@ -737,7 +737,7 @@
                         <li>Priority support</li>
                         <li>Advanced analytics</li>
                     </ul>
-                    <button class="btn-primary" onclick="loginAnon()" style="width:100%;justify-content:center">Get Pro</button>
+                    <button class="btn-primary" onclick="apiAnon()" style="width:100%;justify-content:center">Get Pro</button>
                 </div>
                 <div class="pricing-card reveal reveal-delay-2">
                     <div class="pricing-name">Team</div>
@@ -750,7 +750,7 @@
                         <li>Custom lesson creation</li>
                         <li>Student progress tracking</li>
                     </ul>
-                    <button class="btn-outline" onclick="loginAnon()" style="width:100%">Contact Sales</button>
+                    <button class="btn-outline" onclick="apiAnon()" style="width:100%">Contact Sales</button>
                 </div>
             </div>
         </div>
@@ -770,7 +770,7 @@
             <div>
                 <div class="footer-col-title">VIK_PRO</div>
                 <button class="footer-link" onclick="showView('hero')">Home</button>
-                <button class="footer-link" onclick="loginAnon()">Sandbox</button>
+                <button class="footer-link" onclick="apiAnon()">Sandbox</button>
                 <a class="footer-link" href="https://vikco.qzz.io" target="_blank">Visit Site</a>
             </div>
             <div>
@@ -1929,7 +1929,7 @@ window.downloadFile = () => {
     showToast('Downloaded ' + activeFile);
 };
 
-// Animate community stats counters
+// Animate community stats counters with comma formatting
 function animateStats() {
     const stats = [
         { id: 'stat-users', target: 1247 },
@@ -1947,30 +1947,32 @@ function animateStats() {
             const elapsed = now - start;
             const progress = Math.min(elapsed / duration, 1);
             const eased = 1 - Math.pow(1 - progress, 3);
-            el.textContent = Math.floor(eased * target);
+            el.textContent = Math.floor(eased * target).toLocaleString();
             if (progress < 1) requestAnimationFrame(update);
         }
         requestAnimationFrame(update);
     });
 }
 
-// Observe community stats section to trigger animation on scroll
-const statsObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-        if (e.isIntersecting) {
-            animateStats();
-            statsObserver.unobserve(e.target);
-        }
-    });
-}, { threshold: 0.3 });
-
-// Wait for DOM then observe
-setTimeout(() => {
-    const statsSection = document.querySelector('.stats-community');
-    if (statsSection) statsObserver.observe(statsSection);
-}, 500);
+// Setup stats observer (called from onload)
+let statsObserverInstance = null;
+function setupStatsObserver() {
+    if (statsObserverInstance) statsObserverInstance.disconnect();
+    const section = document.querySelector('.stats-community');
+    if (!section) return;
+    statsObserverInstance = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                animateStats();
+                statsObserverInstance.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.3 });
+    statsObserverInstance.observe(section);
+}
 window.onload = () => {
     updateAllUI();
+    setupStatsObserver();
     setTimeout(() => {
         document.querySelectorAll('#hero-view .reveal').forEach(el => el.classList.add('visible'));
     }, 200);
