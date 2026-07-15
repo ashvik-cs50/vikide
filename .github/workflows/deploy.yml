@@ -35,7 +35,7 @@ jobs:
         run: cd vik-ide && npm ci
 
       - name: Build React app
-        run: cd vik-ide && npm run build
+        run: cd vik-ide && BASE_URL=/vikide/ npm run build
 
       # SPA fallback: GitHub Pages serves 404.html for unknown routes
       - name: Handle SPA routing
