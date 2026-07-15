@@ -48,7 +48,7 @@ export function FeaturesSection() {
             marginTop: '4rem',
           }}
         >
-          {features.map((f, i) => (
+          {features.map((f) => (
             <div
               key={f.name}
               className="feature-card reveal"

@@ -36,13 +36,6 @@ export function IDEView({
   const gutterRef = useRef<HTMLDivElement>(null);
   const [cursorPos, setCursorPos] = useState({ line: 1, col: 1 });
 
-  // Sync gutter with editor content
-  useEffect(() => {
-    if (gutterRef.current) {
-      const count = currentContent.split('\n').length;
-      gutterRef.current.innerHTML = Array.from({ length: count }, (_, i) => `${i + 1}<br/>`).join('');
-    }
-  }, [currentContent]);
   const [saveStatus, setSaveStatus] = useState('Synced');
 
   // AI Chat state
@@ -50,9 +43,16 @@ export function IDEView({
     { role: 'system', content: 'Vik AI — Ask me to explain, write, or fix your Vik Script code.' },
   ]);
   const [aiInput, setAIInput] = useState('');
-  const [aiSettingsOpen, setAISettingsOpen] = useState(false);
 
   const currentContent = files[activeFile]?.content || '';
+
+  // Sync gutter with editor content
+  useEffect(() => {
+    if (gutterRef.current) {
+      const count = currentContent.split('\n').length;
+      gutterRef.current.innerHTML = Array.from({ length: count }, (_, i) => `${i + 1}<br/>`).join('');
+    }
+  }, [currentContent]);
 
   const handleEditorChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -241,7 +241,7 @@ export function IDEView({
       </div>
 
       {/* IDE Body */}
-      <Group direction="horizontal" style={{ overflow: 'hidden', flex: 1 }}>
+      <Group style={{ overflow: 'hidden', flex: 1 }}>
         {/* Sidebar */}
         <Panel defaultSize={18} minSize={10} maxSize={30}>
           <div
@@ -867,7 +867,7 @@ function TerminalPanel({
 }
 
 /* ── Mock Gemini (placeholder - real API integration later) ── */
-async function mockGemini(prompt: string, code: string): Promise<string> {
+async function mockGemini(prompt: string, _code: string): Promise<string> {
   await new Promise(r => setTimeout(r, 500));
   const lower = prompt.toLowerCase();
   if (lower.includes('explain') || lower.includes('what does')) {
