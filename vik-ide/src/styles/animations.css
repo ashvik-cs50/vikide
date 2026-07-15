@@ -1,0 +1,240 @@
+@import './variables.css';
+
+/* ── REVEAL ANIMATIONS ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.7s var(--easing), transform 0.7s var(--easing);
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+.reveal-delay-4 {
+  transition-delay: 0.45s;
+}
+
+.reveal-rotate {
+  opacity: 0;
+  transform: translateY(40px) rotateX(5deg);
+  transition: opacity 0.7s var(--easing), transform 0.7s var(--easing);
+}
+.reveal-rotate.visible {
+  opacity: 1;
+  transform: translateY(0) rotateX(0deg);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: translateY(30px) scale(0.95);
+  transition: opacity 0.6s var(--easing), transform 0.6s var(--easing);
+}
+.reveal-scale.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+.reveal-blur {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(20px);
+  transition: opacity 0.6s var(--easing), filter 0.6s var(--easing),
+    transform 0.6s var(--easing);
+}
+.reveal-blur.visible {
+  opacity: 1;
+  filter: blur(0);
+  transform: translateY(0);
+}
+
+/* ── VIEW TRANSITIONS ── */
+.view-enter {
+  animation: viewFadeIn 0.55s var(--easing) forwards;
+}
+@keyframes viewFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── HEADLINE ANIMATION ── */
+.hero-headline-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(40px);
+  animation: headlineReveal 0.7s var(--easing) forwards;
+}
+.hero-headline-line:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.hero-headline-line:nth-child(2) {
+  animation-delay: 0.25s;
+}
+.hero-headline-line:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes headlineReveal {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── CTA SLIDE UP ── */
+.hero-cta-group {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: ctaSlideUp 0.6s var(--easing) 1.2s forwards;
+}
+@keyframes ctaSlideUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── PULSE ── */
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* ── SHIMMER ── */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(57, 255, 20, 0.04) 25%,
+    rgba(57, 255, 20, 0.12) 50%,
+    rgba(57, 255, 20, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── GLOW PULSE ── */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px rgba(57, 255, 20, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 24px rgba(57, 255, 20, 0.6);
+  }
+}
+.glow-pulse {
+  animation: glow-pulse 2s infinite;
+}
+
+/* ── TERMINAL LINE ── */
+@keyframes termLine {
+  from {
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ── MSG SLIDE IN ── */
+@keyframes msgSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── MODAL IN ── */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── BACKGROUND GRID ── */
+@keyframes gridPulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* ── SCAN BEAM ── */
+@keyframes scanDown {
+  0% {
+    transform: translateY(-100%);
+  }
+  50% {
+    transform: translateY(100vh);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-rotate,
+  .reveal-scale,
+  .reveal-blur {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+  .hero-headline-line {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hero-cta-group {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  [class*='reveal'] {
+    transition: none !important;
+  }
+}

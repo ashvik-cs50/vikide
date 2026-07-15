@@ -6,3 +6,6 @@
 !.env.example
 .env
 node_modules/
+
+# macOS
+.DS_Store

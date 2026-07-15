@@ -1,0 +1,26 @@
+:root {
+  --neon: #39ff14;
+  --neon-dim: rgba(57, 255, 20, 0.08);
+  --neon-mid: rgba(57, 255, 20, 0.3);
+  --bg: #050508;
+  --bg2: #090a0d;
+  --bg3: #111318;
+  --bg4: #181b20;
+  --panel: #0f1115;
+  --panel-light: #14171d;
+  --border: rgba(57, 255, 20, 0.12);
+  --border-bright: rgba(57, 255, 20, 0.4);
+  --text-muted: rgba(255, 255, 255, 0.35);
+  --text-dim: rgba(255, 255, 255, 0.1);
+  --panel-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  --edge-gradient: linear-gradient(
+    90deg,
+    transparent,
+    var(--neon),
+    transparent
+  );
+  --easing: cubic-bezier(0.22, 1, 0.36, 1);
+  --warning: #f9a826;
+  --danger: #ff4b4b;
+}

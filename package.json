@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "@types/three": "^0.185.1",
+    "framer-motion": "^12.42.2",
+    "react-resizable-panels": "^4.12.2",
+    "react-router-dom": "^7.18.1",
+    "three": "^0.185.1"
+  }
+}
