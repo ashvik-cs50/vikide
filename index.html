@@ -1899,7 +1899,7 @@ function checkAuthState() {
         showView('hero');
     }
 }
-checkAuthState();
+// checkAuthState moved to end of module
 // Cloud project state tracking
 let currentProjectId = localStorage.getItem('vik_current_project_id') || null;
 let cloudProjects = [];
@@ -2274,7 +2274,7 @@ function showView(id) {
         target.style.display = 'grid';
         document.body.style.overflow = 'hidden';
         setTimeout(() => {
-            renderFileTree(); renderTabs(); renderSyntaxPanel();
+            window.renderFileTree(); window.renderTabs(); window.renderSyntaxPanel();
             const ed = document.getElementById('mainEditor');
             if (ed) { ed.value = files[activeFile] || ''; updateGutter(ed); }
             document.getElementById('current-filename').textContent = activeFile;
@@ -2294,7 +2294,7 @@ function showView(id) {
     requestAnimationFrame(() => target.classList.add('view-enter'));
 }window.showView = showView;
 
-function updateAllUI() { renderFileTree(); renderTabs(); renderDashboard(); updateStats(); renderSyntaxPanel(); }
+function updateAllUI() { window.renderFileTree(); window.renderTabs(); renderDashboard(); updateStats(); window.renderSyntaxPanel(); }
 
 function updateStats() {
     const names = Object.keys(files);
@@ -2357,7 +2357,7 @@ window.closeTab = (name) => {
     if (Object.keys(files).length <= 1) { showToast('Cannot close last file'); return; }
     delete files[name];
     if (activeFile === name) activeFile = Object.keys(files)[0];
-    renderTabs(); renderFileTree();
+    window.renderTabs(); window.renderFileTree();
     const ed = document.getElementById('mainEditor');
     if (ed) { ed.value = files[activeFile] || ''; updateGutter(ed); }
     document.getElementById('current-filename').textContent = activeFile;
@@ -2369,7 +2369,7 @@ function openFileInEditor(name) {
     activeFile = name;
     if (ed) { ed.value = files[name] || ''; updateGutter(ed); ed.focus(); }
     document.getElementById('current-filename').textContent = name;
-    renderFileTree(); renderTabs();
+    window.renderFileTree(); window.renderTabs();
     addActivity(`Opened ${name}`);
 }
 
@@ -2740,7 +2740,7 @@ document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
         e.preventDefault();
         const ws = document.getElementById('workspace-view');
-        if (ws && ws.style.display !== 'none') runCode();
+        if (ws && ws.style.display !== 'none') window.runCode();
         return;
     }
     if ((e.ctrlKey || e.metaKey) && e.key === 'n') { e.preventDefault(); openNewFile(); return; }
@@ -2820,6 +2820,9 @@ window.onload = () => {
         document.querySelectorAll('#hero-view .reveal').forEach(el => el.classList.add('visible'));
     }, 200);
 };
+
+// Initialize VikIDE after all window-scoped functions are registered.
+window.checkAuthState?.();
 </script>
 </body>
 </html>
