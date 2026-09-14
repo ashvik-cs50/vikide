@@ -1,13 +1,18 @@
 import { lazy, Suspense } from 'react';
 import { AuthCard } from '../auth/AuthCard';
 
-// Lazy-load Hero3D (which contains three.js) so it's only fetched when hero view loads
-const Hero3D = lazy(() => import('./Hero3D').then(m => ({ default: m.Hero3D })));
+const Hero3D = lazy(() =>
+  import('./Hero3D').then(m => ({ default: m.Hero3D }))
+);
 
 interface HeroSectionProps {
   user: unknown;
   onLogin: (email: string, password: string) => Promise<void>;
-  onRegister: (username: string, email: string, password: string) => Promise<void>;
+  onRegister: (
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
   onAnon: () => Promise<void>;
   onLaunchIDE: () => void;
   authError: string | null;
@@ -21,6 +26,12 @@ export function HeroSection({
   onLaunchIDE,
   authError,
 }: HeroSectionProps) {
+  const scrollToFooter = () => {
+    document
+      .getElementById('site-footer')
+      ?.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <div
       style={{
@@ -48,12 +59,23 @@ export function HeroSection({
         Version 4.0.2 — Vik Script Powered
       </p>
 
-      <Suspense fallback={<div style={{ width: 220, height: 220, margin: '0 auto 2.5rem' }} />}>
+      <Suspense
+        fallback={
+          <div
+            style={{
+              width: 220,
+              height: 220,
+              margin: '0 auto 2.5rem',
+            }}
+          />
+        }
+      >
         <Hero3D />
       </Suspense>
 
       <h1 className="hero-headline">
         <span className="hero-headline-line">BUILD.</span>
+
         <span
           className="hero-headline-line"
           style={{
@@ -64,8 +86,10 @@ export function HeroSection({
         >
           CREATE.
         </span>
+
         <span className="hero-headline-line">SHIP.</span>
       </h1>
+
       <p
         className="hero-sub"
         style={{
@@ -85,10 +109,11 @@ export function HeroSection({
         <div
           style={{
             width: '100%',
-            maxWidth: 360,
+            maxWidth: 400,
             opacity: 0,
             transform: 'translateY(32px)',
-            animation: 'viewFadeIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.6s forwards',
+            animation:
+              'viewFadeIn 0.55s cubic-bezier(0.22,1,0.36,1) 0.6s forwards',
           }}
         >
           <AuthCard
@@ -100,7 +125,10 @@ export function HeroSection({
         </div>
       )}
 
-      <div className="hero-cta-group" style={{ marginTop: user ? '2rem' : 0 }}>
+      <div
+        className="hero-cta-group"
+        style={{ marginTop: user ? '2rem' : '1.5rem' }}
+      >
         <button className="btn-primary" onClick={onLaunchIDE}>
           <svg
             width="14"
@@ -112,21 +140,22 @@ export function HeroSection({
           >
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
+
           Launch IDE
         </button>
+
+        <button className="btn-outline" onClick={scrollToFooter}>
+          Sitemap
+        </button>
+
         <button
           className="btn-outline"
           onClick={() =>
-            document
-              .getElementById('features-section')
-              ?.scrollIntoView({ behavior: 'smooth' })
+            window.open(
+              'https://github.com/ashvik-cs50/vikide',
+              '_blank'
+            )
           }
-        >
-          View Demo
-        </button>
-        <button
-          className="btn-outline"
-          onClick={() => window.open('https://github.com', '_blank')}
         >
           GitHub
         </button>
