@@ -278,30 +278,15 @@ function Hero({ go }: { go: (page: Page) => void }) {
 
 function Learn({ go }: { go: (page: Page) => void }) {
   const lessons = [
-    [
-      "01",
-      "Output",
-      "say Hello!",
-      "Show text to the user.",
-    ],
+    ["01", "Output", "say Hello!", "Show text to the user."],
     [
       "02",
       "Input",
       "get name What is your name?",
       "Ask for a value.",
     ],
-    [
-      "03",
-      "Variables",
-      "set score = 10",
-      "Store information.",
-    ],
-    [
-      "04",
-      "Conditions",
-      "i age >= 13",
-      "Make decisions.",
-    ],
+    ["03", "Variables", "set score = 10", "Store information."],
+    ["04", "Conditions", "i age >= 13", "Make decisions."],
     [
       "05",
       "Arrays",
@@ -335,11 +320,8 @@ function Learn({ go }: { go: (page: Page) => void }) {
         {lessons.map(([number, title, code, description]) => (
           <article key={number}>
             <span>{number}</span>
-
             <h3>{title}</h3>
-
             <code>{code}</code>
-
             <p>{description}</p>
           </article>
         ))}
@@ -445,10 +427,7 @@ function Login({ go }: { go: (page: Page) => void }) {
     localStorage.setItem(
       "vik-user",
       JSON.stringify({
-        name:
-          name ||
-          email.split("@")[0] ||
-          "VIK User",
+        name: name || email.split("@")[0] || "VIK User",
         email,
       })
     );
@@ -669,56 +648,126 @@ function Footer({ go }: { go: (page: Page) => void }) {
       <div className="footer-main">
         <div>
           <Logo onClick={() => go("home")} />
-
           <p>Learn. Create. Code.</p>
         </div>
 
         <div>
           <b>Sitemap</b>
 
-          <button onClick={() => go("home")}>
-            Home
-          </button>
-
-          <button onClick={() => go("learn")}>
-            Learn
-          </button>
-
+          <button onClick={() => go("home")}>Home</button>
+          <button onClick={() => go("learn")}>Learn</button>
           <button onClick={() => go("resources")}>
             Resources
           </button>
-
-          <button onClick={() => go("ide")}>
-            IDE
-          </button>
+          <button onClick={() => go("ide")}>IDE</button>
         </div>
 
         <div>
           <b>Socials</b>
 
-          <a
-            href={socials.instagram}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Instagram ↗
-          </a>
+          <div className="social-icons">
+            {/* Instagram */}
+            <a
+              href={socials.instagram}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              title="Instagram"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect
+                  x="3"
+                  y="3"
+                  width="18"
+                  height="18"
+                  rx="5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <circle
+                  cx="17.5"
+                  cy="6.5"
+                  r="1"
+                  fill="currentColor"
+                />
+              </svg>
+            </a>
 
-          <a
-            href={socials.youtube}
-            target="_blank"
-            rel="noreferrer"
-          >
-            YouTube ↗
-          </a>
+            {/* YouTube */}
+            <a
+              href={socials.youtube}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="YouTube"
+              title="YouTube"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M21.6 7.2a2.7 2.7 0 0 0-1.9-1.9C18 4.8 12 4.8 12 4.8s-6 0-7.7.5a2.7 2.7 0 0 0-1.9 1.9C2 8.9 2 12 2 12s0 3.1.4 4.8a2.7 2.7 0 0 0 1.9 1.9c1.7.5 7.7.5 7.7.5s6 0 7.7-.5a2.7 2.7 0 0 0 1.9-1.9c.4-1.7.4-4.8.4-4.8s0-3.1-.4-4.8Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                />
+                <path
+                  d="m10 9 5 3-5 3V9Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </a>
 
-          <a
-            href={socials.discord}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Discord ↗
-          </a>
+            {/* Discord */}
+            <a
+              href={socials.discord}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Discord"
+              title="Discord"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M19.5 5.5A16 16 0 0 0 15.6 4l-.5 1a14 14 0 0 0-6.2 0l-.5-1a16 16 0 0 0-3.9 1.5C2.2 9.2 1.5 12.8 1.8 16.3A15.8 15.8 0 0 0 6.6 19l1.2-1.7a9.7 9.7 0 0 1-1.9-.9l.5-.4a11.5 11.5 0 0 0 11.2 0l.5.4c-.6.3-1.3.6-1.9.9l1.2 1.7a15.8 15.8 0 0 0 4.8-2.7c.4-4.1-.7-7.7-2.7-10.8Z"
+                  fill="currentColor"
+                />
+                <circle
+                  cx="8.5"
+                  cy="12"
+                  r="1.5"
+                  fill="var(--vik-bg)"
+                />
+                <circle
+                  cx="15.5"
+                  cy="12"
+                  r="1.5"
+                  fill="var(--vik-bg)"
+                />
+              </svg>
+            </a>
+
+            {/* GitHub */}
+            <a
+              href={socials.github}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub"
+              title="GitHub"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  d="M12 2.5a9.5 9.5 0 0 0-3 18.5c.5.1.7-.2.7-.5v-1.8c-2.8.6-3.4-1.2-3.4-1.2-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 0 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.7-1.4-2.2-.2-4.5-1.1-4.5-4.8 0-1.1.4-2 .9-2.7-.1-.2-.4-1.3.1-2.7 0 0 .8-.3 2.8 1a9.5 9.5 0 0 1 5 0c2-1.3 2.8-1 2.8-1 .5 1.4.2 2.5.1 2.7.6.7.9 1.6.9 2.7 0 3.7-2.3 4.6-4.5 4.8.4.3.7 1 .7 1.9v2.8c0 .3.2.6.7.5A9.5 9.5 0 0 0 12 2.5Z"
+                  fill="currentColor"
+                />
+              </svg>
+            </a>
+          </div>
         </div>
       </div>
 
