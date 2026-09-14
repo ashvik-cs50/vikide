@@ -1,12 +1,11 @@
-// src/Theme.tsx
-
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
   useMemo,
   useState,
 } from "react";
+import type { ReactNode } from "react";
 
 import "./Theme.css";
 
@@ -78,7 +77,7 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 export function ThemeProvider({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   const [theme, setThemeState] = useState<ThemeId>(() => {
     const saved = localStorage.getItem("vik-theme") as ThemeId | null;
