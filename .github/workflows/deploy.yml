@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Root Site to GitHub Pages
 
 on:
   push:
@@ -19,27 +19,32 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          cache-dependency-path: vik-ide/package-lock.json
+      - name: Prepare root site
+        run: |
+          mkdir -p _site
+          cp index.html _site/index.html
 
-      - name: Install dependencies
-        run: cd vik-ide && npm ci
+          if [ -d "assets" ]; then
+            cp -R assets _site/assets
+          fi
 
-      - name: Build React app
-        run: cd vik-ide && BASE_URL=/vikide/ npm run build
+          if [ -d "public" ]; then
+            cp -R public/* _site/ 2>/dev/null || true
+          fi
 
-      # SPA fallback: GitHub Pages serves 404.html for unknown routes
+          if [ -f "favicon.svg" ]; then
+            cp favicon.svg _site/favicon.svg
+          fi
+
       - name: Handle SPA routing
-        run: cp vik-ide/dist/index.html vik-ide/dist/404.html
+        run: cp _site/index.html _site/404.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -47,7 +52,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: 'vik-ide/dist'
+          path: "_site"
 
       - name: Deploy to GitHub Pages
         id: deployment
